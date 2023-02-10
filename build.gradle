@@ -1,0 +1,21 @@
+plugins {
+  id 'com.github.ben-manes.versions' version '0.45.0'
+  id 'groovy'
+  id 'java'
+}
+
+group = 'io.github.ableron'
+sourceCompatibility = '19'
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  testImplementation 'org.apache.groovy:groovy-all:4.0.9'
+  testImplementation 'org.spockframework:spock-core:2.4-M1-groovy-4.0'
+}
+
+test {
+  useJUnitPlatform()
+}
