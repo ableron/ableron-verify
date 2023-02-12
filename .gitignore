@@ -10,4 +10,5 @@
 .project
 
 # Build
-target/
+.gradle/
+build/
