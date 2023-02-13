@@ -1,6 +1,7 @@
 package io.github.ableron
 
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.images.builder.ImageFromDockerfile
 import org.testcontainers.spock.Testcontainers
 import spock.lang.Shared
@@ -14,20 +15,20 @@ import java.nio.file.Path
 @Testcontainers
 class AbleronJavaSpec extends Specification {
 
+  @Shared
   GenericContainer ableronJava = new GenericContainer<>(new ImageFromDockerfile()
     .withDockerfile(Path.of("ableron-java", "Dockerfile")))
     .withExposedPorts(8080)
+    .waitingFor(Wait.forLogMessage(".*Started AbleronJavaApplication in.*\\n", 1))
 
+  @Shared
   URI verifyUrl
 
+  @Shared
   def httpClient = HttpClient.newBuilder().build()
 
-  def setup() {
-//    ableronJava = new GenericContainer<>(new ImageFromDockerfile()
-//      .withDockerfile(Path.of("ableron-java", "Dockerfile")))
-//      .withExposedPorts(8080)
+  def setupSpec() {
     verifyUrl = URI.create("http://${ableronJava.host}:${ableronJava.firstMappedPort}/verify")
-    System.out.println(verifyUrl)
   }
 
   def "should return content untouched if no includes are present"() {
