@@ -12,6 +12,7 @@ repositories {
 }
 
 dependencies {
+  testImplementation 'com.github.tomakehurst:wiremock:3.0.0-beta-2'
   testImplementation 'org.apache.groovy:groovy-all:4.0.9'
   testImplementation 'org.slf4j:slf4j-simple:2.0.6'
   testImplementation 'org.spockframework:spock-core:2.4-M1-groovy-4.0'

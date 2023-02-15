@@ -1,9 +1,7 @@
 package io.github.ableron
 
 import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.images.builder.ImageFromDockerfile
-import org.testcontainers.spock.Testcontainers
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -12,14 +10,13 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.file.Path
 
-@Testcontainers
-class AbleronJavaSpec extends Specification {
+@org.testcontainers.spock.Testcontainers
+class UiCompositionSpec extends Specification {
 
   @Shared
-  GenericContainer ableronJava = new GenericContainer<>(new ImageFromDockerfile()
+  GenericContainer ableronJava = new GenericContainer<>(new ImageFromDockerfile("ableron/ableron-verify/ableron-java", true)
     .withDockerfile(Path.of("ableron-java", "Dockerfile")))
     .withExposedPorts(8080)
-    .waitingFor(Wait.forLogMessage(".*Started AbleronJavaApplication in.*\\n", 1))
 
   @Shared
   URI verifyUrl
