@@ -5,7 +5,6 @@ plugins {
 }
 
 group = 'io.github.ableron'
-sourceCompatibility = '19'
 
 repositories {
   mavenCentral()

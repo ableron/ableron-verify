@@ -3,26 +3,24 @@ package io.github.ableron
 import com.github.tomakehurst.wiremock.WireMockServer
 import org.testcontainers.Testcontainers
 import org.testcontainers.containers.GenericContainer
-import org.testcontainers.images.builder.ImageFromDockerfile
 import spock.lang.Shared
 import spock.lang.Specification
 
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import java.nio.file.Path
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get
 import static com.github.tomakehurst.wiremock.client.WireMock.ok
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 
-class UiCompositionSpec extends Specification {
+abstract class UiCompositionBaseSpec extends Specification {
 
   @Shared
   WireMockServer wiremockServer
 
   @Shared
-  GenericContainer ableronJava
+  GenericContainer container
 
   @Shared
   URI verifyUrl
@@ -30,19 +28,20 @@ class UiCompositionSpec extends Specification {
   @Shared
   def httpClient = HttpClient.newBuilder().build()
 
+  abstract GenericContainer getContainerUnderTest()
+
   def setupSpec() {
     wiremockServer = new WireMockServer(options().dynamicPort())
     wiremockServer.start()
     Testcontainers.exposeHostPorts(wiremockServer.port())
-    ableronJava = new GenericContainer<>(new ImageFromDockerfile().withDockerfile(Path.of("ableron-java", "Dockerfile")))
-      .withExposedPorts(8080)
-    ableronJava.start()
-    verifyUrl = URI.create("http://${ableronJava.host}:${ableronJava.firstMappedPort}/verify")
+    container = getContainerUnderTest()
+    container.start()
+    verifyUrl = URI.create("http://${container.host}:${container.firstMappedPort}/verify")
   }
 
   def cleanupSpec() {
     wiremockServer.stop()
-    ableronJava.stop()
+    container.stop()
   }
 
   def cleanup() {
