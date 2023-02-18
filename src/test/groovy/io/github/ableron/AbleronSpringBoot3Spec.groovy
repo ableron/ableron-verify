@@ -10,7 +10,7 @@ class AbleronSpringBoot3Spec extends UiCompositionBaseSpec {
   @Override
   GenericContainer getContainerUnderTest() {
     return new GenericContainer<>(new ImageFromDockerfile()
-      .withDockerfile(Path.of("ableron-spring-boot", "Dockerfile")))
+      .withDockerfile(Path.of("ableron-spring-boot-3", "Dockerfile")))
       .withExposedPorts(8080)
   }
 }
