@@ -5,7 +5,7 @@ import org.testcontainers.images.builder.ImageFromDockerfile
 
 import java.nio.file.Path
 
-class AbleronSpringBootSpec extends UiCompositionBaseSpec {
+class AbleronSpringBoot3Spec extends UiCompositionBaseSpec {
 
   @Override
   GenericContainer getContainerUnderTest() {

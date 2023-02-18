@@ -1,4 +1,4 @@
-name: CI
+name: ableron-spring-boot with Spring Boot 2
 
 on: push
 

@@ -1,4 +1,4 @@
-name: CI
+name: ableron-spring-boot with Spring Boot 3
 
 on: push
 
@@ -12,4 +12,4 @@ jobs:
           java-version: 19
           distribution: temurin
           cache: gradle
-      - run: ./gradlew test --tests *AbleronSpringBootSpec
+      - run: ./gradlew test --tests *AbleronSpringBoot3Spec
