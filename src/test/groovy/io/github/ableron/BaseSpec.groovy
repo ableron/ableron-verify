@@ -14,7 +14,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get
 import static com.github.tomakehurst.wiremock.client.WireMock.ok
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 
-abstract class UiCompositionBaseSpec extends Specification {
+abstract class BaseSpec extends Specification {
 
   @Shared
   WireMockServer wiremockServer

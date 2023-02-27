@@ -1,9 +1,9 @@
-name: CI
+name: ableron-java with Java 11
 
 on: push
 
 jobs:
-  test:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -12,4 +12,4 @@ jobs:
           java-version: 19
           distribution: temurin
           cache: gradle
-      - run: ./gradlew test
+      - run: ./gradlew test --tests '*.Java11Spec'

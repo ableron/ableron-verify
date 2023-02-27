@@ -5,12 +5,12 @@ import org.testcontainers.images.builder.ImageFromDockerfile
 
 import java.nio.file.Path
 
-class AbleronJavaSpec extends UiCompositionBaseSpec {
+class Java19Spec extends BaseSpec {
 
   @Override
   GenericContainer getContainerUnderTest() {
     return new GenericContainer<>(new ImageFromDockerfile()
-      .withDockerfile(Path.of("ableron-java", "Dockerfile")))
+      .withDockerfile(Path.of("ableron-java-java19", "Dockerfile")))
       .withExposedPorts(8080)
   }
 }

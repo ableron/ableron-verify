@@ -5,12 +5,12 @@ import org.testcontainers.images.builder.ImageFromDockerfile
 
 import java.nio.file.Path
 
-class AbleronSpringBootSpec extends UiCompositionBaseSpec {
+class SpringBoot2Java11Spec extends BaseSpec {
 
   @Override
   GenericContainer getContainerUnderTest() {
     return new GenericContainer<>(new ImageFromDockerfile()
-      .withDockerfile(Path.of("ableron-spring-boot", "Dockerfile")))
+      .withDockerfile(Path.of("ableron-spring-boot-2-java11", "Dockerfile")))
       .withExposedPorts(8080)
   }
 }

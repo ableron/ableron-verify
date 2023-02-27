@@ -1,0 +1,15 @@
+plugins {
+  id 'java'
+  id 'org.springframework.boot' version '3.0.3'
+}
+
+group = 'io.github.ableron'
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  implementation 'io.github.ableron:ableron-spring-boot-starter:3.0.0'
+  implementation 'org.springframework.boot:spring-boot-starter-web:3.0.3'
+}
