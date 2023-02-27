@@ -1,9 +1,11 @@
 # Ableron Verification Test Suite
 Test suite to verify all implementations of ableron provide a common feature set.
 
-* [![Java Integration Status](https://github.com/ableron/ableron-verify/actions/workflows/java-integration.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/java-integration.yml)
-* [![Spring Boot 2 Integration Status](https://github.com/ableron/ableron-verify/actions/workflows/spring-boot-2-integration.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/spring-boot-2-integration.yml)
-* [![Spring Boot 3 Integration Status](https://github.com/ableron/ableron-verify/actions/workflows/spring-boot-3-integration.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/spring-boot-3-integration.yml)
+* [![ableron-java with Java 11 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java11.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java11.yml)
+* [![ableron-java with Java 19 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java19.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java19.yml)
+* [![ableron-spring-boot with Spring Boot 2 and Java 11 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java11.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java11.yml)
+* [![ableron-spring-boot with Spring Boot 3 and Java 17 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java17.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java17.yml)
+* [![ableron-spring-boot with Spring Boot 3 and Java 19 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java19.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java19.yml)
 
 ## Quick Start
 * Run tests
@@ -14,3 +16,12 @@ Test suite to verify all implementations of ableron provide a common feature set
    ```console
    $ ./gradlew dependencyUpdates -Drevision=release
    ```
+
+## How to add new spec
+* New runnable application which shall be verified
+   * Create folder `/ableron-<technology>-<spec-details>`, e.g. `/ableron-java-java19`
+* New test which tests the created application
+   * Create file `/src/test/groovy/io/github/ableron/<SpecName>Spec.groovy` (just copy existing spec and adjust path to application)
+* New GitHub workflow which runs the new test
+   * Create file `/.github/workflows/<SpecName>.yml` (just copy existing one and adjust test to execute)
+* New badge in README.md which shows the status of the spec

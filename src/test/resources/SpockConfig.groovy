@@ -1,5 +1,0 @@
-runner {
-  parallel {
-    enabled true
-  }
-}
