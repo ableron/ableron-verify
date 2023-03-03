@@ -1,6 +1,7 @@
 package io.github.ableron
 
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer
 import org.testcontainers.Testcontainers
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
@@ -10,8 +11,7 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
-import static com.github.tomakehurst.wiremock.client.WireMock.get
-import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.*
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 
 abstract class BaseSpec extends Specification {
@@ -31,7 +31,9 @@ abstract class BaseSpec extends Specification {
   abstract GenericContainer getContainerUnderTest()
 
   def setupSpec() {
-    wiremockServer = new WireMockServer(options().dynamicPort())
+    wiremockServer = new WireMockServer(options()
+      .dynamicPort()
+      .extensions(new ResponseTemplateTransformer(false)))
     wiremockServer.start()
     Testcontainers.exposeHostPorts(wiremockServer.port())
     container = getContainerUnderTest()
@@ -48,32 +50,155 @@ abstract class BaseSpec extends Specification {
     wiremockServer.resetAll()
   }
 
-  def "should return content untouched if no includes are present"() {
+  def "should return content untouched if no (valid) includes are present"() {
     when:
     def response = httpClient.send(HttpRequest.newBuilder()
       .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString("test"))
+      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
       .build(), HttpResponse.BodyHandlers.ofString())
 
     then:
     response.statusCode() == 200
-    response.body() == "test"
+    response.body() == responseTemplate
+
+    where:
+    responseTemplate << [
+      "test",
+      "<ableron-include/>",
+      "<ableron-include >",
+      "<ableron-include src=\"s\">",
+      "<ableron-include src=\"s\" b=\"b\">"
+    ]
   }
 
-  def "should resolve include"() {
+  def "should resolve includes"() {
     given:
     wiremockServer.stubFor(get("/fragment").willReturn(ok()
-      .withBody("included content")
+      .withBody("fragment")
     ))
 
     when:
     def response = httpClient.send(HttpRequest.newBuilder()
       .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString("<ableron-include src=\"http://host.testcontainers.internal:" + wiremockServer.port() + "/fragment\">fallback</ableron-include>"))
+      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
       .build(), HttpResponse.BodyHandlers.ofString())
 
     then:
     response.statusCode() == 200
-    response.body() == "included content"
+    response.body() == expectedResponseBody
+
+    where:
+    responseTemplate                                                                                                                 | expectedResponseBody
+    "<ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"/>"                               | "fragment"
+    "<ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\" />"                              | "fragment"
+    "<ableron-include\nsrc=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"\n\n/>"                          | "fragment"
+    "<ableron-include\tsrc=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"\t\t/>"                          | "fragment"
+    "<ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"></ableron-include>"              | "fragment"
+    "<ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"> </ableron-include>"             | "fragment"
+    "<ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\">foo\nbar\nbaz</ableron-include>" | "fragment"
+    "\n<ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"/>\n"                           | "\nfragment\n"
+    "<div><ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"/></div>"                    | "<div>fragment</div>"
+    "<ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"  fallback-src=\"...\"/>"         | "fragment"
+    "<ableron-include foo=\"\" src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"/>"                      | "fragment"
+    "<ableron-include -src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\">fallback</ableron-include>"     | "fallback"
+    "<ableron-include _src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\">fallback</ableron-include>"     | "fallback"
+    "<ableron-include 0src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\">fallback</ableron-include>"     | "fallback"
+  }
+
+  def "should resolve multiple includes in same response"() {
+    given:
+    def responseTemplate = """
+      <html>
+      <head>
+        <ableron-include src="http://host.testcontainers.internal:${wiremockServer.port()}/echo/fragment1" />
+        <title>Foo</title>
+        <ableron-include foo="bar" src="http://host.testcontainers.internal:${wiremockServer.port()}/echo/fragment2"/>
+      </head>
+      <body>
+        <ableron-include src="http://host.testcontainers.internal:${wiremockServer.port()}/echo/fragment3" fallback-src="https://example.com"/>
+        <ableron-include src="http://host.testcontainers.internal:${wiremockServer.port()}/echo/fragment3" fallback-src="https://example.com">fallback</ableron-include>
+      </body>
+      </html>
+    """
+    wiremockServer.stubFor(get(urlPathMatching("/echo/.*")).willReturn(ok()
+      .withBody("{{request.pathSegments.[1]}}")
+      .withTransformers("response-template")
+    ))
+
+    when:
+    def response = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    response.statusCode() == 200
+    response.body() == """
+      <html>
+      <head>
+        fragment1
+        <title>Foo</title>
+        fragment2
+      </head>
+      <body>
+        fragment3
+        fragment3
+      </body>
+      </html>
+    """
+  }
+
+  def "should resolve includes in big content"() {
+    given:
+    def randomStringWithoutIncludes = new Random().ints(32, 127)
+      .limit(512 * 1024)
+      .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+      .toString()
+    def include = "<ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"/>"
+    wiremockServer.stubFor(get("/fragment").willReturn(ok()
+      .withBody("fragment")
+    ))
+
+    when:
+    def responseRandomStringWithIncludeAtTheBeginning = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include + randomStringWithoutIncludes))
+      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseRandomStringWithIncludeAtTheEnd = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(randomStringWithoutIncludes + include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseRandomStringWithIncludeAtTheMiddle = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(randomStringWithoutIncludes + include + randomStringWithoutIncludes))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    responseRandomStringWithIncludeAtTheBeginning.statusCode() == 200
+    responseRandomStringWithIncludeAtTheBeginning.body() == "fragment" + randomStringWithoutIncludes
+    responseRandomStringWithIncludeAtTheEnd.statusCode() == 200
+    responseRandomStringWithIncludeAtTheEnd.body() == randomStringWithoutIncludes + "fragment"
+    responseRandomStringWithIncludeAtTheMiddle.statusCode() == 200
+    responseRandomStringWithIncludeAtTheMiddle.body() == randomStringWithoutIncludes + "fragment" + randomStringWithoutIncludes
+  }
+
+  def "should set Content-Length header to zero for empty response"() {
+    when:
+    def response = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    response.statusCode() == 200
+    response.headers().firstValue("Content-Length") == Optional.of(expectedResponseContentLength)
+    response.body() == expectedResponseBody
+
+    where:
+    responseTemplate                                       | expectedResponseBody | expectedResponseContentLength
+    "<ableron-include />"                                  | ""                   | "0"
+    "<ableron-include ></ableron-include>"                 | ""                   | "0"
+    "<ableron-include _src=\"foo.bar\"></ableron-include>" | ""                   | "0"
+    "<ableron-include > </ableron-include>"                | " "                  | "1"
   }
 }
