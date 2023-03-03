@@ -23,6 +23,9 @@ abstract class BaseSpec extends Specification {
   GenericContainer container
 
   @Shared
+  String wiremockAddress
+
+  @Shared
   URI verifyUrl
 
   @Shared
@@ -35,6 +38,7 @@ abstract class BaseSpec extends Specification {
       .dynamicPort()
       .extensions(new ResponseTemplateTransformer(false)))
     wiremockServer.start()
+    wiremockAddress = "http://host.testcontainers.internal:${wiremockServer.port()}"
     Testcontainers.exposeHostPorts(wiremockServer.port())
     container = getContainerUnderTest()
     container.start()
@@ -88,21 +92,21 @@ abstract class BaseSpec extends Specification {
     response.body() == expectedResponseBody
 
     where:
-    responseTemplate                                                                                                                 | expectedResponseBody
-    "<ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"/>"                               | "fragment"
-    "<ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\" />"                              | "fragment"
-    "<ableron-include\nsrc=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"\n\n/>"                          | "fragment"
-    "<ableron-include\tsrc=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"\t\t/>"                          | "fragment"
-    "<ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"></ableron-include>"              | "fragment"
-    "<ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"> </ableron-include>"             | "fragment"
-    "<ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\">foo\nbar\nbaz</ableron-include>" | "fragment"
-    "\n<ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"/>\n"                           | "\nfragment\n"
-    "<div><ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"/></div>"                    | "<div>fragment</div>"
-    "<ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"  fallback-src=\"...\"/>"         | "fragment"
-    "<ableron-include foo=\"\" src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"/>"                      | "fragment"
-    "<ableron-include -src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\">fallback</ableron-include>"     | "fallback"
-    "<ableron-include _src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\">fallback</ableron-include>"     | "fallback"
-    "<ableron-include 0src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\">fallback</ableron-include>"     | "fallback"
+    responseTemplate                                                                       | expectedResponseBody
+    "<ableron-include src=\"${wiremockAddress}/fragment\"/>"                               | "fragment"
+    "<ableron-include src=\"${wiremockAddress}/fragment\" />"                              | "fragment"
+    "<ableron-include\nsrc=\"${wiremockAddress}/fragment\"\n\n/>"                          | "fragment"
+    "<ableron-include\tsrc=\"${wiremockAddress}/fragment\"\t\t/>"                          | "fragment"
+    "<ableron-include src=\"${wiremockAddress}/fragment\"></ableron-include>"              | "fragment"
+    "<ableron-include src=\"${wiremockAddress}/fragment\"> </ableron-include>"             | "fragment"
+    "<ableron-include src=\"${wiremockAddress}/fragment\">foo\nbar\nbaz</ableron-include>" | "fragment"
+    "\n<ableron-include src=\"${wiremockAddress}/fragment\"/>\n"                           | "\nfragment\n"
+    "<div><ableron-include src=\"${wiremockAddress}/fragment\"/></div>"                    | "<div>fragment</div>"
+    "<ableron-include src=\"${wiremockAddress}/fragment\"  fallback-src=\"...\"/>"         | "fragment"
+    "<ableron-include foo=\"\" src=\"${wiremockAddress}/fragment\"/>"                      | "fragment"
+    "<ableron-include -src=\"${wiremockAddress}/fragment\">fallback</ableron-include>"     | "fallback"
+    "<ableron-include _src=\"${wiremockAddress}/fragment\">fallback</ableron-include>"     | "fallback"
+    "<ableron-include 0src=\"${wiremockAddress}/fragment\">fallback</ableron-include>"     | "fallback"
   }
 
   def "should resolve multiple includes in same response"() {
@@ -110,13 +114,13 @@ abstract class BaseSpec extends Specification {
     def responseTemplate = """
       <html>
       <head>
-        <ableron-include src="http://host.testcontainers.internal:${wiremockServer.port()}/echo/fragment1" />
+        <ableron-include src="${wiremockAddress}/echo/fragment1" />
         <title>Foo</title>
-        <ableron-include foo="bar" src="http://host.testcontainers.internal:${wiremockServer.port()}/echo/fragment2"/>
+        <ableron-include foo="bar" src="${wiremockAddress}/echo/fragment2"/>
       </head>
       <body>
-        <ableron-include src="http://host.testcontainers.internal:${wiremockServer.port()}/echo/fragment3" fallback-src="https://example.com"/>
-        <ableron-include src="http://host.testcontainers.internal:${wiremockServer.port()}/echo/fragment3" fallback-src="https://example.com">fallback</ableron-include>
+        <ableron-include src="${wiremockAddress}/echo/fragment3" fallback-src="https://example.com"/>
+        <ableron-include src="${wiremockAddress}/echo/fragment3" fallback-src="https://example.com">fallback</ableron-include>
       </body>
       </html>
     """
@@ -179,7 +183,7 @@ abstract class BaseSpec extends Specification {
       .limit(512 * 1024)
       .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
       .toString()
-    def include = "<ableron-include src=\"http://host.testcontainers.internal:${wiremockServer.port()}/fragment\"/>"
+    def include = "<ableron-include src=\"${wiremockAddress}/fragment\"/>"
     wiremockServer.stubFor(get("/fragment").willReturn(ok()
       .withBody("fragment")
     ))
@@ -243,5 +247,100 @@ abstract class BaseSpec extends Specification {
     "invalid src url"              | '<ableron-include src=",._">fallback</ableron-include>'                        | "fallback"
     "invalid src timeout"          | '<ableron-include src-timeout-millis="5s">fallback</ableron-include>'          | "fallback"
     "invalid fallback-src timeout" | '<ableron-include fallback-src-timeout-millis="5s">fallback</ableron-include>' | "fallback"
+  }
+
+  def "should cache responses"() {
+    given:
+    def responseTemplate = """
+      <html>
+      <head>
+        <ableron-include src="${wiremockAddress}/k5I9M"><!-- failed loading 1st include --></ableron-include>
+        <title>Foo</title>
+        <ableron-include src="${wiremockAddress}/k5I9M"><!-- failed loading 2nd include --></ableron-include>
+      </head>
+      <body>
+        <ableron-include src="${wiremockAddress}/k5I9M"><!-- failed loading 3rd include --></ableron-include>
+        <ableron-include src="${wiremockAddress}/k5I9M_404"><!-- failed loading 4th include --></ableron-include>
+      </body>
+      </html>
+    """
+    wiremockServer.stubFor(get("/k5I9M").willReturn(ok()
+      .withBody("fragment")
+      .withFixedDelay(200)
+    ))
+    wiremockServer.stubFor(get("/k5I9M_404").willReturn(notFound()))
+
+    when:
+    def response = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    response.statusCode() == 200
+    response.body() == """
+      <html>
+      <head>
+        fragment
+        <title>Foo</title>
+        fragment
+      </head>
+      <body>
+        fragment
+        <!-- failed loading 4th include -->
+      </body>
+      </html>
+    """
+    wiremockServer.getAllServeEvents().size() == 2
+    wiremockServer.verify(1, getRequestedFor(urlEqualTo("/k5I9M")))
+    wiremockServer.verify(1, getRequestedFor(urlEqualTo("/k5I9M_404")))
+  }
+
+  def "should not cache responses if prohibited by Expires header"() {
+    given:
+    def responseTemplate = """
+      <html>
+      <head>
+        <ableron-include src="${wiremockAddress}/heM8d"><!-- failed loading 1st include --></ableron-include>
+        <title>Foo</title>
+        <ableron-include src="${wiremockAddress}/heM8d"><!-- failed loading 2nd include --></ableron-include>
+      </head>
+      <body>
+        <ableron-include src="${wiremockAddress}/heM8d"><!-- failed loading 3rd include --></ableron-include>
+        <ableron-include src="${wiremockAddress}/heM8d_404"><!-- failed loading 4th include --></ableron-include>
+      </body>
+      </html>
+    """
+    wiremockServer.stubFor(get("/heM8d").willReturn(ok()
+      .withBody("fragment")
+      .withHeader("Expires", "0")
+      .withFixedDelay(200)
+    ))
+    wiremockServer.stubFor(get("/heM8d_404").willReturn(notFound()))
+
+    when:
+    def response = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    response.statusCode() == 200
+    response.body() == """
+      <html>
+      <head>
+        fragment
+        <title>Foo</title>
+        fragment
+      </head>
+      <body>
+        fragment
+        <!-- failed loading 4th include -->
+      </body>
+      </html>
+    """
+    wiremockServer.getAllServeEvents().size() == 4
+    wiremockServer.verify(3, getRequestedFor(urlEqualTo("/heM8d")))
+    wiremockServer.verify(1, getRequestedFor(urlEqualTo("/heM8d_404")))
   }
 }
