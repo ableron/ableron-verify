@@ -1,0 +1,18 @@
+plugins {
+  id 'java'
+  id 'org.springframework.boot' version '2.7.9'
+}
+
+group = 'io.github.ableron'
+
+repositories {
+  mavenCentral()
+  maven {
+    url 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+  }
+}
+
+dependencies {
+  implementation 'io.github.ableron:ableron-spring-boot-starter:2.0.2'
+  implementation 'org.springframework.boot:spring-boot-starter-web:2.7.9'
+}

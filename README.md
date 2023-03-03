@@ -4,6 +4,7 @@ Test suite to verify all implementations of ableron provide a common feature set
 * [![ableron-java with Java 11 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java11.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java11.yml)
 * [![ableron-java with Java 19 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java19.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java19.yml)
 * [![ableron-spring-boot with Spring Boot 2 and Java 11 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java11.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java11.yml)
+* [![ableron-spring-boot with Spring Boot 2 and Java 19 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java19.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java19.yml)
 * [![ableron-spring-boot with Spring Boot 3 and Java 17 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java17.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java17.yml)
 * [![ableron-spring-boot with Spring Boot 3 and Java 19 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java19.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java19.yml)
 
