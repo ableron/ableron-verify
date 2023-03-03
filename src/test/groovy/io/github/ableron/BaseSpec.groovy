@@ -148,6 +148,31 @@ abstract class BaseSpec extends Specification {
     """
   }
 
+  def "should replace identical includes"() {
+    given:
+    def responseTemplate = """
+      <ableron-include src="foo-bar"><!-- #1 --></ableron-include>
+      <ableron-include src="foo-bar"><!-- #1 --></ableron-include>
+      <ableron-include src="foo-bar"><!-- #1 --></ableron-include>
+      <ableron-include src="foo-bar"><!-- #2 --></ableron-include>
+    """
+
+    when:
+    def response = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    response.statusCode() == 200
+    response.body() == """
+      <!-- #1 -->
+      <!-- #1 -->
+      <!-- #1 -->
+      <!-- #2 -->
+    """
+  }
+
   def "should resolve includes in big content"() {
     given:
     def randomStringWithoutIncludes = new Random().ints(32, 127)
@@ -200,5 +225,23 @@ abstract class BaseSpec extends Specification {
     "<ableron-include ></ableron-include>"                 | ""                   | "0"
     "<ableron-include _src=\"foo.bar\"></ableron-include>" | ""                   | "0"
     "<ableron-include > </ableron-include>"                | " "                  | "1"
+  }
+
+  def "should not crash due to #scenarioName"() {
+    when:
+    def response = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString("<ableron-include >before</ableron-include>" + includeTag + "<ableron-include >after</ableron-include>"))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    response.statusCode() == 200
+    response.body() == "before" + expectedResult + "after"
+
+    where:
+    scenarioName                   | includeTag                                                                     | expectedResult
+    "invalid src url"              | '<ableron-include src=",._">fallback</ableron-include>'                        | "fallback"
+    "invalid src timeout"          | '<ableron-include src-timeout-millis="5s">fallback</ableron-include>'          | "fallback"
+    "invalid fallback-src timeout" | '<ableron-include fallback-src-timeout-millis="5s">fallback</ableron-include>' | "fallback"
   }
 }
