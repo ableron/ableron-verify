@@ -6,10 +6,12 @@ import org.testcontainers.Testcontainers
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Timeout
 
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.util.concurrent.TimeUnit
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
@@ -75,7 +77,7 @@ abstract class BaseSpec extends Specification {
     ]
   }
 
-  def "should resolve includes"() {
+  def "should resolve includes with src attribute"() {
     given:
     wiremockServer.stubFor(get("/fragment").willReturn(ok()
       .withBody("fragment")
@@ -107,6 +109,50 @@ abstract class BaseSpec extends Specification {
     "<ableron-include -src=\"${wiremockAddress}/fragment\">fallback</ableron-include>"     | "fallback"
     "<ableron-include _src=\"${wiremockAddress}/fragment\">fallback</ableron-include>"     | "fallback"
     "<ableron-include 0src=\"${wiremockAddress}/fragment\">fallback</ableron-include>"     | "fallback"
+  }
+
+  def "should resolve include with fallback-src if src could not be loaded"() {
+    given:
+    wiremockServer.stubFor(get("/src-500").willReturn(serverError()
+      .withBody("response-from-src")
+    ))
+    wiremockServer.stubFor(get("/fallback-src-200").willReturn(ok()
+      .withBody("response-from-fallback-src")
+    ))
+
+    when:
+    def response = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(
+        "<ableron-include src=\"${wiremockAddress}/src-500\" fallback-src=\"${wiremockAddress}/fallback-src-200\"/>"
+      ))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    response.statusCode() == 200
+    response.body() == "response-from-fallback-src"
+  }
+
+  def "should resolve include with fallback content if src and fallback-src could not be loaded"() {
+    given:
+    wiremockServer.stubFor(get("/src-500").willReturn(serverError()
+      .withBody("response-from-src")
+    ))
+    wiremockServer.stubFor(get("/fallback-src-404").willReturn(notFound()
+      .withBody("response-from-fallback-src")
+    ))
+
+    when:
+    def response = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(
+        "<ableron-include src=\"${wiremockAddress}/src-500\" fallback-src=\"${wiremockAddress}/fallback-src-404\">fallback content</ableron-include>"
+      ))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    response.statusCode() == 200
+    response.body() == "fallback content"
   }
 
   def "should resolve multiple includes in same response"() {
@@ -342,5 +388,73 @@ abstract class BaseSpec extends Specification {
     wiremockServer.getAllServeEvents().size() == 4
     wiremockServer.verify(3, getRequestedFor(urlEqualTo("/heM8d")))
     wiremockServer.verify(1, getRequestedFor(urlEqualTo("/heM8d_404")))
+  }
+
+  @Timeout(value = 7, unit = TimeUnit.SECONDS)
+  def "should resolve includes in parallel"() {
+    given:
+    def responseTemplate = """
+      <html>
+      <head>
+        <ableron-include src="${wiremockAddress}/503"><!-- failed loading include #1 --></ableron-include>
+        <title>Foo</title>
+        <ableron-include src="${wiremockAddress}/1000ms-delay"><!-- failed loading include #2 --></ableron-include>
+      </head>
+      <body>
+        <ableron-include src="${wiremockAddress}/2000ms-delay"><!-- failed loading include #3 --></ableron-include>
+        <ableron-include src="${wiremockAddress}/2100ms-delay"><!-- failed loading include #4 --></ableron-include>
+        <ableron-include src="${wiremockAddress}/2200ms-delay"><!-- failed loading include #5 --></ableron-include>
+        <ableron-include src="${wiremockAddress}/404"><!-- failed loading include #6 --></ableron-include>
+      </body>
+      </html>
+    """
+    wiremockServer.stubFor(get("/503").willReturn(serviceUnavailable()
+      .withBody("503")
+      .withFixedDelay(2000)
+    ))
+    wiremockServer.stubFor(get("/1000ms-delay").willReturn(ok()
+      .withBody("response-2")
+      .withFixedDelay(1000)
+    ))
+    wiremockServer.stubFor(get("/2000ms-delay").willReturn(ok()
+      .withBody("response-3")
+      .withFixedDelay(2000)
+    ))
+    wiremockServer.stubFor(get("/2100ms-delay").willReturn(ok()
+      .withBody("response-4")
+      .withFixedDelay(2100)
+    ))
+    wiremockServer.stubFor(get("/2200ms-delay").willReturn(ok()
+      .withBody("response-5")
+      .withFixedDelay(2200)
+    ))
+    wiremockServer.stubFor(get("/404").willReturn(notFound()
+      .withBody("404")
+      .withFixedDelay(2200)
+    ))
+
+    when:
+    def response = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    response.statusCode() == 200
+    response.body() == """
+      <html>
+      <head>
+        <!-- failed loading include #1 -->
+        <title>Foo</title>
+        response-2
+      </head>
+      <body>
+        response-3
+        response-4
+        response-5
+        <!-- failed loading include #6 -->
+      </body>
+      </html>
+    """
   }
 }
