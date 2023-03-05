@@ -312,6 +312,7 @@ abstract class BaseSpec extends Specification {
     """
     wiremockServer.stubFor(get("/k5I9M").willReturn(ok()
       .withBody("fragment")
+      .withHeader("Cache-Control", "max-age=30")
       .withFixedDelay(200)
     ))
     wiremockServer.stubFor(get("/k5I9M_404").willReturn(notFound()))
@@ -456,5 +457,24 @@ abstract class BaseSpec extends Specification {
       </body>
       </html>
     """
+  }
+
+  def "should follow redirects when resolving URLs"() {
+    given:
+    wiremockServer.stubFor(get("/redirect-test").willReturn(temporaryRedirect(wiremockAddress + "/redirect-test-2")))
+    wiremockServer.stubFor(get("/redirect-test-2").willReturn(temporaryRedirect(wiremockAddress + "/redirect-test-3")))
+    wiremockServer.stubFor(get("/redirect-test-3").willReturn(ok()
+      .withBody("response after redirect")
+    ))
+
+    when:
+    def response = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString("<ableron-include src=\"${wiremockAddress}/redirect-test\"/>"))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    response.statusCode() == 200
+    response.body() == "response after redirect"
   }
 }
