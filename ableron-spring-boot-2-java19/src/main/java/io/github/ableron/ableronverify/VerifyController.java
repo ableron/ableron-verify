@@ -1,4 +1,4 @@
-package io.github.ableron.ableronverify.ableronspringboot;
+package io.github.ableron.ableronverify;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;

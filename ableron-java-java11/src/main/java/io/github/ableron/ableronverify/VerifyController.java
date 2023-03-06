@@ -1,4 +1,4 @@
-package io.github.ableron.ableronverify.ableronjava;
+package io.github.ableron.ableronverify;
 
 import io.github.ableron.Ableron;
 import io.github.ableron.AbleronConfig;

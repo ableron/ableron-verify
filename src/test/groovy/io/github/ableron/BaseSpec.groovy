@@ -477,4 +477,32 @@ abstract class BaseSpec extends Specification {
     response.statusCode() == 200
     response.body() == "response after redirect"
   }
+
+  def "should favor include tag specific request timeout over global one"() {
+    given:
+    wiremockServer.stubFor(get("/5500ms-delay").willReturn(ok()
+      .withBody("response")
+      .withHeader("Expires", "0")
+      .withFixedDelay(5500)
+    ))
+
+    when:
+    def response = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    response.statusCode() == 200
+    response.body() == expectedResolvedInclude
+
+    where:
+    include                                                                                                    | expectedResolvedInclude
+    "<ableron-include src=\"${wiremockAddress}/5500ms-delay\"/>"                                               |""
+    "<ableron-include src=\"${wiremockAddress}/5500ms-delay\" src-timeout-millis=\"6000\"/>"                   |"response"
+    "<ableron-include src=\"${wiremockAddress}/5500ms-delay\" fallback-src-timeout-millis=\"6000\"/>"          |""
+    "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\"/>"                                      |""
+    "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\" src-timeout-millis=\"6000\"/>"          |""
+    "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\" fallback-src-timeout-millis=\"6000\"/>" |"response"
+  }
 }

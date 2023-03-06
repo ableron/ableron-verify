@@ -1,4 +1,4 @@
-package io.github.ableron.ableronverify.ableronspringboot;
+package io.github.ableron.ableronverify;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -7,6 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class AbleronSpringBootApplication {
 
 	public static void main(String[] args) {
-    SpringApplication.run(AbleronSpringBootApplication.class, args);
+		SpringApplication.run(AbleronSpringBootApplication.class, args);
 	}
 }
