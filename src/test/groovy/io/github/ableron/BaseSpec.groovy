@@ -12,6 +12,9 @@ import spock.lang.Unroll
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*
@@ -682,6 +685,84 @@ abstract class BaseSpec extends Specification {
     responseAfter2Seconds.body() == "response 1st req"
     responseAfter4Seconds.statusCode() == 200
     responseAfter4Seconds.body() == "response 2nd req"
+  }
+
+  def "should cache response based on Expires header and current time if Cache-Control header and Date header are not present"() {
+    given:
+    def dateTimeFormatter = DateTimeFormatter.RFC_1123_DATE_TIME
+      .withZone(ZoneId.of("GMT"))
+    def include = "<ableron-include src=\"${wiremockAddress}/test-expires-header\"/>"
+    wiremockServer.stubFor(get("/test-expires-header")
+      .inScenario("expires header test")
+      .whenScenarioStateIs("Started")
+      .willReturn(ok()
+        .withBody("response 1st req")
+        .withHeader("Cache-Control", "public")
+        .withHeader("Expires", dateTimeFormatter.format(Instant.now().plusSeconds(3))))
+      .willSetStateTo("1st req completed"))
+    wiremockServer.stubFor(get("/test-expires-header")
+      .inScenario("expires header test")
+      .whenScenarioStateIs("1st req completed")
+      .willReturn(ok()
+        .withBody("response 2nd req"))
+      .willSetStateTo("2nd req completed"))
+
+    when:
+    def responseInitial = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+    sleep(2000)
+    def responseAfter2Seconds = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+    sleep(2000)
+    def responseAfter4Seconds = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    responseInitial.statusCode() == 200
+    responseInitial.body() == "response 1st req"
+    responseAfter2Seconds.statusCode() == 200
+    responseAfter2Seconds.body() == "response 1st req"
+    responseAfter4Seconds.statusCode() == 200
+    responseAfter4Seconds.body() == "response 2nd req"
+  }
+
+  def "should handle Expires header with value 0"() {
+    given:
+    def include = "<ableron-include src=\"${wiremockAddress}/test-expires-header-0\"/>"
+    wiremockServer.stubFor(get("/test-expires-header-0")
+      .inScenario("expires 0 header test")
+      .whenScenarioStateIs("Started")
+      .willReturn(ok()
+        .withBody("response 1st req")
+        .withHeader("Expires", "0"))
+      .willSetStateTo("1st req completed"))
+    wiremockServer.stubFor(get("/test-expires-header-0")
+      .inScenario("expires 0 header test")
+      .whenScenarioStateIs("1st req completed")
+      .willReturn(ok()
+        .withBody("response 2nd req")))
+
+    when:
+    def responseReq1 = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseReq2 = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    responseReq1.statusCode() == 200
+    responseReq1.body() == "response 1st req"
+    responseReq2.statusCode() == 200
+    responseReq2.body() == "response 2nd req"
   }
 
   def "should treat http header names as case insensitive"() {
