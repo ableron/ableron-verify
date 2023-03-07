@@ -398,16 +398,16 @@ abstract class BaseSpec extends Specification {
   @Unroll
   def "should cache HTTP response if status code is defined as cacheable in RFC 7231 - Status #responsStatus"() {
     when:
-    def includeSrcPath = "/test-caching-" + UUID.randomUUID().toString()
+    def includeSrcPath = randomIncludeSrcPath()
     wiremockServer.stubFor(get(includeSrcPath)
-      .inScenario("response cache test")
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(status(responsStatus)
         .withBody(responseBody)
         .withHeader("Cache-Control", "max-age=10"))
       .willSetStateTo("1st req completed"))
     wiremockServer.stubFor(get(includeSrcPath)
-      .inScenario("response cache test")
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
         .withBody("response 2nd req")))
@@ -453,17 +453,18 @@ abstract class BaseSpec extends Specification {
 
   def "should cache response for s-maxage seconds if directive is present"() {
     given:
-    def content = "<ableron-include src=\"${wiremockAddress}/test-s-maxage\"/>"
-    wiremockServer.stubFor(get("/test-s-maxage")
-      .inScenario("s-maxage test")
+    def includeSrcPath = randomIncludeSrcPath()
+    def content = "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
         .withBody("response 1st req")
         .withHeader("Cache-Control", "max-age=2, s-maxage=4 , public")
         .withHeader("Expires", "Wed, 21 Oct 2015 07:28:00 GMT"))
       .willSetStateTo("1st req completed"))
-    wiremockServer.stubFor(get("/test-s-maxage")
-      .inScenario("s-maxage test")
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
         .withBody("response 2nd req"))
@@ -484,17 +485,18 @@ abstract class BaseSpec extends Specification {
 
   def "should cache response for max-age seconds if directive is present"() {
     given:
-    def content = "<ableron-include src=\"${wiremockAddress}/test-max-age\"/>"
-    wiremockServer.stubFor(get("/test-max-age")
-      .inScenario("max-age test")
+    def includeSrcPath = randomIncludeSrcPath()
+    def content = "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
         .withBody("response 1st req")
         .withHeader("Cache-Control", "max-age=3")
         .withHeader("Expires", "Wed, 21 Oct 2015 07:28:00 GMT"))
       .willSetStateTo("1st req completed"))
-    wiremockServer.stubFor(get("/test-max-age")
-      .inScenario("max-age test")
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
         .withBody("response 2nd req"))
@@ -515,9 +517,10 @@ abstract class BaseSpec extends Specification {
 
   def "should cache response for max-age seconds minus Age seconds if directive is present and Age header is set"() {
     given:
-    def content = "<ableron-include src=\"${wiremockAddress}/test-max-age-and-age\"/>"
-    wiremockServer.stubFor(get("/test-max-age-and-age")
-      .inScenario("max-age and age test")
+    def includeSrcPath = randomIncludeSrcPath()
+    def content = "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
         .withBody("response 1st req")
@@ -525,8 +528,8 @@ abstract class BaseSpec extends Specification {
         .withHeader("Age", "3597")
         .withHeader("Expires", "Wed, 21 Oct 2015 07:28:00 GMT"))
       .willSetStateTo("1st req completed"))
-    wiremockServer.stubFor(get("/test-max-age-and-age")
-      .inScenario("max-age and age test")
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
         .withBody("response 2nd req"))
@@ -549,17 +552,18 @@ abstract class BaseSpec extends Specification {
     given:
     def dateTimeFormatter = DateTimeFormatter.RFC_1123_DATE_TIME
       .withZone(ZoneId.of("GMT"))
-    def content = "<ableron-include src=\"${wiremockAddress}/test-expires-header\"/>"
-    wiremockServer.stubFor(get("/test-expires-header")
-      .inScenario("expires header test")
+    def includeSrcPath = randomIncludeSrcPath()
+    def content = "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
         .withBody("response 1st req")
         .withHeader("Cache-Control", "public")
         .withHeader("Expires", dateTimeFormatter.format(Instant.now().plusSeconds(3))))
       .willSetStateTo("1st req completed"))
-    wiremockServer.stubFor(get("/test-expires-header")
-      .inScenario("expires header test")
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
         .withBody("response 2nd req"))
@@ -580,16 +584,17 @@ abstract class BaseSpec extends Specification {
 
   def "should handle Expires header with value 0"() {
     given:
-    def content = "<ableron-include src=\"${wiremockAddress}/test-expires-header-0\"/>"
-    wiremockServer.stubFor(get("/test-expires-header-0")
-      .inScenario("expires 0 header test")
+    def includeSrcPath = randomIncludeSrcPath()
+    def content = "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
         .withBody("response 1st req")
         .withHeader("Expires", "0"))
       .willSetStateTo("1st req completed"))
-    wiremockServer.stubFor(get("/test-expires-header-0")
-      .inScenario("expires 0 header test")
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
         .withBody("response 2nd req")))
@@ -605,16 +610,17 @@ abstract class BaseSpec extends Specification {
 
   def "should treat http header names as case insensitive"() {
     given:
-    def content = "<ableron-include src=\"${wiremockAddress}/test-case-insensitive-header-names\"/>"
-    wiremockServer.stubFor(get("/test-case-insensitive-header-names")
-      .inScenario("case insensitive header names test")
+    def includeSrcPath = randomIncludeSrcPath()
+    def content = "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
         .withBody("response 1st req")
         .withHeader("EXpIRes", "0"))
       .willSetStateTo("1st req completed"))
-    wiremockServer.stubFor(get("/test-case-insensitive-header-names")
-      .inScenario("case insensitive header names test")
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
         .withBody("response 2nd req")))
@@ -630,17 +636,18 @@ abstract class BaseSpec extends Specification {
 
   def "should cache response based on Expires and Date header if Cache-Control header is not present"() {
     given:
-    def content = "<ableron-include src=\"${wiremockAddress}/test-expires-and-date-headers\"/>"
-    wiremockServer.stubFor(get("/test-expires-and-date-headers")
-      .inScenario("expires and date headers test")
+    def includeSrcPath = randomIncludeSrcPath()
+    def content = "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
         .withBody("response 1st req")
         .withHeader("Date", "Wed, 12 Oct 2050 07:27:57 GMT")
         .withHeader("Expires", "Wed, 12 Oct 2050 07:28:00 GMT"))
       .willSetStateTo("1st req completed"))
-    wiremockServer.stubFor(get("/test-expires-and-date-headers")
-      .inScenario("expires and date headers test")
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
         .withBody("response 2nd req")))
@@ -660,16 +667,17 @@ abstract class BaseSpec extends Specification {
 
   def "should not cache response if Cache-Control header is set but without max-age directives"() {
     given:
-    def content = "<ableron-include src=\"${wiremockAddress}/test-cache-control-no-max-age\"/>"
-    wiremockServer.stubFor(get("/test-cache-control-no-max-age")
-      .inScenario("cache-control no max-age test")
+    def includeSrcPath = randomIncludeSrcPath()
+    def content = "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
         .withBody("response 1st req")
         .withHeader("Cache-Control", "no-cache,no-store,must-revalidate"))
       .willSetStateTo("1st req completed"))
-    wiremockServer.stubFor(get("/test-cache-control-no-max-age")
-      .inScenario("cache-control no max-age test")
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
         .withBody("response 2nd req")))
@@ -685,7 +693,7 @@ abstract class BaseSpec extends Specification {
 
   def "should not crash when cache headers contain invalid values"() {
     when:
-    def includeSrcPath = "/" + UUID.randomUUID().toString()
+    def includeSrcPath = randomIncludeSrcPath()
     wiremockServer.stubFor(get(includeSrcPath).willReturn(ok()
       .withBody("response")
       .withHeader(header1Name, header1Value)
@@ -707,15 +715,16 @@ abstract class BaseSpec extends Specification {
 
   def "should cache response if no expiration time is indicated via response header"() {
     given:
-    def content = "<ableron-include src=\"${wiremockAddress}/test-default-response-caching\"/>"
-    wiremockServer.stubFor(get("/test-default-response-caching")
-      .inScenario("default response caching test")
+    def includeSrcPath = randomIncludeSrcPath()
+    def content = "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
         .withBody("response 1st req"))
       .willSetStateTo("1st req completed"))
-    wiremockServer.stubFor(get("/test-default-response-caching")
-      .inScenario("default response caching test")
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
         .withBody("response 2nd req")))
@@ -741,5 +750,9 @@ abstract class BaseSpec extends Specification {
       .build(), HttpResponse.BodyHandlers.ofString())
     assert response.statusCode() == 200
     return response
+  }
+
+  private String randomIncludeSrcPath() {
+    return "/" + UUID.randomUUID().toString()
   }
 }
