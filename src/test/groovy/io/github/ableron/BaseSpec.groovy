@@ -864,6 +864,31 @@ abstract class BaseSpec extends Specification {
     responseReq2.body() == "response 2nd req"
   }
 
+  def "should not crash when cache headers contain invalid values"() {
+    when:
+    def includeSrcPath = "/" + UUID.randomUUID().toString()
+    wiremockServer.stubFor(get(includeSrcPath).willReturn(ok()
+      .withBody("response")
+      .withHeader(header1Name, header1Value)
+      .withHeader(header2Name, header2Value)))
+    def response = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString("<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    response.statusCode() == 200
+    response.body() == "response"
+
+    where:
+    header1Name     | header1Value                    | header2Name | header2Value
+    "Cache-Control" | "s-maxage=not-numeric"          | "X-Dummy"   | "dummy"
+    "Cache-Control" | "max-age=not-numeric"           | "X-Dummy"   | "dummy"
+    "Cache-Control" | "max-age=3600"                  | "Age"       | "not-numeric"
+    "Expires"       | "not-numeric"                   | "X-Dummy"   | "dummy"
+    "Expires"       | "Wed, 12 Oct 2050 07:28:00 GMT" | "Date"      | "not-a-date"
+  }
+
   private HttpResponse<String> performUiIntegration(String responseTemplate) {
     return httpClient.send(HttpRequest.newBuilder()
       .uri(verifyUrl)
