@@ -654,7 +654,7 @@ abstract class BaseSpec extends Specification {
 
     when:
     def result1 = performUiIntegration(content)
-    sleep(2000)
+    sleep(1000)
     def result2 = performUiIntegration(content)
     sleep(3000)
     def result3 = performUiIntegration(content)
