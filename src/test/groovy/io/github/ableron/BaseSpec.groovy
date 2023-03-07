@@ -61,11 +61,8 @@ abstract class BaseSpec extends Specification {
   }
 
   def "should return content untouched if no (valid) includes are present"() {
-    when:
-    def response = performUiIntegration(content)
-
-    then:
-    response.body() == content
+    expect:
+    performUiIntegration(content) == content
 
     where:
     content << [
@@ -82,14 +79,11 @@ abstract class BaseSpec extends Specification {
     wiremockServer.stubFor(get("/fragment").willReturn(ok()
       .withBody("fragment")))
 
-    when:
-    def response = performUiIntegration(content)
-
-    then:
-    response.body() == expectedResponseBody
+    expect:
+    performUiIntegration(content) == expectedResolvedContent
 
     where:
-    content                                                                                | expectedResponseBody
+    content                                                                                | expectedResolvedContent
     "<ableron-include src=\"${wiremockAddress}/fragment\"/>"                               | "fragment"
     "<ableron-include src=\"${wiremockAddress}/fragment\" />"                              | "fragment"
     "<ableron-include\nsrc=\"${wiremockAddress}/fragment\"\n\n/>"                          | "fragment"
@@ -113,12 +107,10 @@ abstract class BaseSpec extends Specification {
     wiremockServer.stubFor(get("/fallback-src-200").willReturn(ok()
       .withBody("response-from-fallback-src")))
 
-    when:
-    def response = performUiIntegration(
-      "<ableron-include src=\"${wiremockAddress}/src-500\" fallback-src=\"${wiremockAddress}/fallback-src-200\"/>")
-
-    then:
-    response.body() == "response-from-fallback-src"
+    expect:
+    performUiIntegration(
+      "<ableron-include src=\"${wiremockAddress}/src-500\" fallback-src=\"${wiremockAddress}/fallback-src-200\"/>"
+    ) == "response-from-fallback-src"
   }
 
   def "should resolve include with fallback content if src and fallback-src could not be loaded"() {
@@ -128,12 +120,10 @@ abstract class BaseSpec extends Specification {
     wiremockServer.stubFor(get("/fallback-src-404").willReturn(notFound()
       .withBody("response-from-fallback-src")))
 
-    when:
-    def response = performUiIntegration(
-      "<ableron-include src=\"${wiremockAddress}/src-500\" fallback-src=\"${wiremockAddress}/fallback-src-404\">fallback content</ableron-include>")
-
-    then:
-    response.body() == "fallback content"
+    expect:
+    performUiIntegration(
+      "<ableron-include src=\"${wiremockAddress}/src-500\" fallback-src=\"${wiremockAddress}/fallback-src-404\">fallback content</ableron-include>"
+    ) == "fallback content"
   }
 
   def "should resolve multiple includes in same response"() {
@@ -142,8 +132,8 @@ abstract class BaseSpec extends Specification {
       .withBody("{{request.pathSegments.[1]}}")
       .withTransformers("response-template")))
 
-    when:
-    def response = performUiIntegration("""
+    expect:
+    performUiIntegration("""
       <html>
       <head>
         <ableron-include src="${wiremockAddress}/echo/fragment1" />
@@ -155,10 +145,7 @@ abstract class BaseSpec extends Specification {
         <ableron-include src="${wiremockAddress}/echo/fragment3" fallback-src="https://example.com">fallback</ableron-include>
       </body>
       </html>
-    """)
-
-    then:
-    response.body() == """
+    """) == """
       <html>
       <head>
         fragment1
@@ -174,16 +161,13 @@ abstract class BaseSpec extends Specification {
   }
 
   def "should replace identical includes"() {
-    when:
-    def response = performUiIntegration("""
+    expect:
+    performUiIntegration("""
       <ableron-include src="foo-bar"><!-- #1 --></ableron-include>
       <ableron-include src="foo-bar"><!-- #1 --></ableron-include>
       <ableron-include src="foo-bar"><!-- #1 --></ableron-include>
       <ableron-include src="foo-bar"><!-- #2 --></ableron-include>
-    """)
-
-    then:
-    response.body() == """
+    """) == """
       <!-- #1 -->
       <!-- #1 -->
       <!-- #1 -->
@@ -202,19 +186,19 @@ abstract class BaseSpec extends Specification {
       .withBody("fragment")))
 
     when:
-    def responseRandomStringWithIncludeAtTheBeginning = performUiIntegration(include + randomStringWithoutIncludes)
-    def responseRandomStringWithIncludeAtTheEnd = performUiIntegration(randomStringWithoutIncludes + include)
-    def responseRandomStringWithIncludeAtTheMiddle = performUiIntegration(randomStringWithoutIncludes + include + randomStringWithoutIncludes)
+    def resultRandomStringWithIncludeAtTheBeginning = performUiIntegration(include + randomStringWithoutIncludes)
+    def resultRandomStringWithIncludeAtTheEnd = performUiIntegration(randomStringWithoutIncludes + include)
+    def resultRandomStringWithIncludeAtTheMiddle = performUiIntegration(randomStringWithoutIncludes + include + randomStringWithoutIncludes)
 
     then:
-    responseRandomStringWithIncludeAtTheBeginning.body() == "fragment" + randomStringWithoutIncludes
-    responseRandomStringWithIncludeAtTheEnd.body() == randomStringWithoutIncludes + "fragment"
-    responseRandomStringWithIncludeAtTheMiddle.body() == randomStringWithoutIncludes + "fragment" + randomStringWithoutIncludes
+    resultRandomStringWithIncludeAtTheBeginning == "fragment" + randomStringWithoutIncludes
+    resultRandomStringWithIncludeAtTheEnd == randomStringWithoutIncludes + "fragment"
+    resultRandomStringWithIncludeAtTheMiddle == randomStringWithoutIncludes + "fragment" + randomStringWithoutIncludes
   }
 
   def "should set Content-Length header to zero for empty response"() {
     when:
-    def response = performUiIntegration(content)
+    def response = performUiIntegrationRaw(content)
 
     then:
     response.headers().firstValue("Content-Length") == Optional.of(expectedResponseContentLength)
@@ -229,15 +213,13 @@ abstract class BaseSpec extends Specification {
   }
 
   def "should not crash due to #scenarioName"() {
-    when:
-    def response = performUiIntegration(
-      "<ableron-include >before</ableron-include>" + includeTag + "<ableron-include >after</ableron-include>")
-
-    then:
-    response.body() == "before" + expectedResult + "after"
+    expect:
+    performUiIntegration(
+      "<ableron-include >before</ableron-include>" + content + "<ableron-include >after</ableron-include>"
+    ) == "before" + expectedResolvedContent + "after"
 
     where:
-    scenarioName                   | includeTag                                                                     | expectedResult
+    scenarioName                   | content                                                                        | expectedResolvedContent
     "invalid src url"              | '<ableron-include src=",._">fallback</ableron-include>'                        | "fallback"
     "invalid src timeout"          | '<ableron-include src-timeout-millis="5s">fallback</ableron-include>'          | "fallback"
     "invalid fallback-src timeout" | '<ableron-include fallback-src-timeout-millis="5s">fallback</ableron-include>' | "fallback"
@@ -245,7 +227,14 @@ abstract class BaseSpec extends Specification {
 
   def "should cache responses"() {
     given:
-    def content = """
+    wiremockServer.stubFor(get("/k5I9M").willReturn(ok()
+      .withBody("fragment")
+      .withHeader("Cache-Control", "max-age=30")
+      .withFixedDelay(200)))
+    wiremockServer.stubFor(get("/k5I9M_404").willReturn(notFound()))
+
+    expect:
+    performUiIntegration("""
       <html>
       <head>
         <ableron-include src="${wiremockAddress}/k5I9M"><!-- failed loading 1st include --></ableron-include>
@@ -257,18 +246,7 @@ abstract class BaseSpec extends Specification {
         <ableron-include src="${wiremockAddress}/k5I9M_404"><!-- failed loading 4th include --></ableron-include>
       </body>
       </html>
-    """
-    wiremockServer.stubFor(get("/k5I9M").willReturn(ok()
-      .withBody("fragment")
-      .withHeader("Cache-Control", "max-age=30")
-      .withFixedDelay(200)))
-    wiremockServer.stubFor(get("/k5I9M_404").willReturn(notFound()))
-
-    when:
-    def response = performUiIntegration(content)
-
-    then:
-    response.body() == """
+    """) == """
       <html>
       <head>
         fragment
@@ -288,7 +266,14 @@ abstract class BaseSpec extends Specification {
 
   def "should not cache responses if prohibited by Expires header"() {
     given:
-    def content = """
+    wiremockServer.stubFor(get("/heM8d").willReturn(ok()
+      .withBody("fragment")
+      .withHeader("Expires", "0")
+      .withFixedDelay(200)))
+    wiremockServer.stubFor(get("/heM8d_404").willReturn(notFound()))
+
+    expect:
+    performUiIntegration("""
       <html>
       <head>
         <ableron-include src="${wiremockAddress}/heM8d"><!-- failed loading 1st include --></ableron-include>
@@ -300,18 +285,7 @@ abstract class BaseSpec extends Specification {
         <ableron-include src="${wiremockAddress}/heM8d_404"><!-- failed loading 4th include --></ableron-include>
       </body>
       </html>
-    """
-    wiremockServer.stubFor(get("/heM8d").willReturn(ok()
-      .withBody("fragment")
-      .withHeader("Expires", "0")
-      .withFixedDelay(200)))
-    wiremockServer.stubFor(get("/heM8d_404").willReturn(notFound()))
-
-    when:
-    def response = performUiIntegration(content)
-
-    then:
-    response.body() == """
+    """) == """
       <html>
       <head>
         fragment
@@ -332,21 +306,6 @@ abstract class BaseSpec extends Specification {
   @Timeout(value = 7, unit = TimeUnit.SECONDS)
   def "should resolve includes in parallel"() {
     given:
-    def content = """
-      <html>
-      <head>
-        <ableron-include src="${wiremockAddress}/503"><!-- failed loading include #1 --></ableron-include>
-        <title>Foo</title>
-        <ableron-include src="${wiremockAddress}/1000ms-delay"><!-- failed loading include #2 --></ableron-include>
-      </head>
-      <body>
-        <ableron-include src="${wiremockAddress}/2000ms-delay"><!-- failed loading include #3 --></ableron-include>
-        <ableron-include src="${wiremockAddress}/2100ms-delay"><!-- failed loading include #4 --></ableron-include>
-        <ableron-include src="${wiremockAddress}/2200ms-delay"><!-- failed loading include #5 --></ableron-include>
-        <ableron-include src="${wiremockAddress}/404"><!-- failed loading include #6 --></ableron-include>
-      </body>
-      </html>
-    """
     wiremockServer.stubFor(get("/503").willReturn(serviceUnavailable()
       .withBody("503")
       .withFixedDelay(2000)))
@@ -366,11 +325,22 @@ abstract class BaseSpec extends Specification {
       .withBody("404")
       .withFixedDelay(2200)))
 
-    when:
-    def response = performUiIntegration(content)
-
-    then:
-    response.body() == """
+    expect:
+    performUiIntegration("""
+      <html>
+      <head>
+        <ableron-include src="${wiremockAddress}/503"><!-- failed loading include #1 --></ableron-include>
+        <title>Foo</title>
+        <ableron-include src="${wiremockAddress}/1000ms-delay"><!-- failed loading include #2 --></ableron-include>
+      </head>
+      <body>
+        <ableron-include src="${wiremockAddress}/2000ms-delay"><!-- failed loading include #3 --></ableron-include>
+        <ableron-include src="${wiremockAddress}/2100ms-delay"><!-- failed loading include #4 --></ableron-include>
+        <ableron-include src="${wiremockAddress}/2200ms-delay"><!-- failed loading include #5 --></ableron-include>
+        <ableron-include src="${wiremockAddress}/404"><!-- failed loading include #6 --></ableron-include>
+      </body>
+      </html>
+    """) == """
       <html>
       <head>
         <!-- failed loading include #1 -->
@@ -395,10 +365,11 @@ abstract class BaseSpec extends Specification {
       .withBody("response after redirect")))
 
     when:
-    def response = performUiIntegration("<ableron-include src=\"${wiremockAddress}/redirect-test\"/>")
+    def result = performUiIntegration(
+      "<ableron-include src=\"${wiremockAddress}/redirect-test\"/>")
 
     then:
-    response.body() == "response after redirect"
+    result == "response after redirect"
   }
 
   def "should favor include tag specific request timeout over global one"() {
@@ -409,13 +380,13 @@ abstract class BaseSpec extends Specification {
       .withFixedDelay(5500)))
 
     when:
-    def response = performUiIntegration(include)
+    def result = performUiIntegration(content)
 
     then:
-    response.body() == expectedResolvedInclude
+    result == expectedResolvedContent
 
     where:
-    include                                                                                                    | expectedResolvedInclude
+    content                                                                                                    | expectedResolvedContent
     "<ableron-include src=\"${wiremockAddress}/5500ms-delay\"/>"                                               | ""
     "<ableron-include src=\"${wiremockAddress}/5500ms-delay\" src-timeout-millis=\"6000\"/>"                   | "response"
     "<ableron-include src=\"${wiremockAddress}/5500ms-delay\" fallback-src-timeout-millis=\"6000\"/>"          | ""
@@ -440,14 +411,14 @@ abstract class BaseSpec extends Specification {
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
         .withBody("response 2nd req")))
-    def response1 = performUiIntegration(
+    def result1 = performUiIntegration(
       "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\">:(</ableron-include>")
-    def response2 = performUiIntegration(
+    def result2 = performUiIntegration(
       "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\">:( 2nd req</ableron-include>")
 
     then:
-    response1.body() == expectedResult1stInclude
-    response2.body() == expectedResult2stInclude
+    result1 == expectedResult1stInclude
+    result2 == expectedResult2stInclude
 
     where:
     responsStatus | responseBody | expectedResponseCached | expectedResult1stInclude | expectedResult2stInclude
@@ -499,16 +470,16 @@ abstract class BaseSpec extends Specification {
       .willSetStateTo("2nd req completed"))
 
     when:
-    def responseInitial = performUiIntegration(content)
+    def result1 = performUiIntegration(content)
     sleep(3000)
-    def responseAfter3Seconds = performUiIntegration(content)
+    def result2 = performUiIntegration(content)
     sleep(2000)
-    def responseAfter5Seconds = performUiIntegration(content)
+    def result3 = performUiIntegration(content)
 
     then:
-    responseInitial.body() == "response 1st req"
-    responseAfter3Seconds.body() == "response 1st req"
-    responseAfter5Seconds.body() == "response 2nd req"
+    result1 == "response 1st req"
+    result2 == "response 1st req"
+    result3 == "response 2nd req"
   }
 
   def "should cache response for max-age seconds if directive is present"() {
@@ -530,16 +501,16 @@ abstract class BaseSpec extends Specification {
       .willSetStateTo("2nd req completed"))
 
     when:
-    def responseInitial = performUiIntegration(content)
+    def result1 = performUiIntegration(content)
     sleep(2000)
-    def responseAfter2Seconds = performUiIntegration(content)
+    def result2 = performUiIntegration(content)
     sleep(2000)
-    def responseAfter4Seconds = performUiIntegration(content)
+    def result3 = performUiIntegration(content)
 
     then:
-    responseInitial.body() == "response 1st req"
-    responseAfter2Seconds.body() == "response 1st req"
-    responseAfter4Seconds.body() == "response 2nd req"
+    result1 == "response 1st req"
+    result2 == "response 1st req"
+    result3 == "response 2nd req"
   }
 
   def "should cache response for max-age seconds minus Age seconds if directive is present and Age header is set"() {
@@ -562,16 +533,16 @@ abstract class BaseSpec extends Specification {
       .willSetStateTo("2nd req completed"))
 
     when:
-    def responseInitial = performUiIntegration(content)
+    def result1 = performUiIntegration(content)
     sleep(2000)
-    def responseAfter2Seconds = performUiIntegration(content)
+    def result2 = performUiIntegration(content)
     sleep(2000)
-    def responseAfter4Seconds = performUiIntegration(content)
+    def result3 = performUiIntegration(content)
 
     then:
-    responseInitial.body() == "response 1st req"
-    responseAfter2Seconds.body() == "response 1st req"
-    responseAfter4Seconds.body() == "response 2nd req"
+    result1 == "response 1st req"
+    result2 == "response 1st req"
+    result3 == "response 2nd req"
   }
 
   def "should cache response based on Expires header and current time if Cache-Control header and Date header are not present"() {
@@ -595,16 +566,16 @@ abstract class BaseSpec extends Specification {
       .willSetStateTo("2nd req completed"))
 
     when:
-    def responseInitial = performUiIntegration(content)
+    def result1 = performUiIntegration(content)
     sleep(2000)
-    def responseAfter2Seconds = performUiIntegration(content)
+    def result2 = performUiIntegration(content)
     sleep(2000)
-    def responseAfter4Seconds = performUiIntegration(content)
+    def result3 = performUiIntegration(content)
 
     then:
-    responseInitial.body() == "response 1st req"
-    responseAfter2Seconds.body() == "response 1st req"
-    responseAfter4Seconds.body() == "response 2nd req"
+    result1 == "response 1st req"
+    result2 == "response 1st req"
+    result3 == "response 2nd req"
   }
 
   def "should handle Expires header with value 0"() {
@@ -624,12 +595,12 @@ abstract class BaseSpec extends Specification {
         .withBody("response 2nd req")))
 
     when:
-    def responseReq1 = performUiIntegration(content)
-    def responseReq2 = performUiIntegration(content)
+    def result1 = performUiIntegration(content)
+    def result2 = performUiIntegration(content)
 
     then:
-    responseReq1.body() == "response 1st req"
-    responseReq2.body() == "response 2nd req"
+    result1 == "response 1st req"
+    result2 == "response 2nd req"
   }
 
   def "should treat http header names as case insensitive"() {
@@ -649,12 +620,12 @@ abstract class BaseSpec extends Specification {
         .withBody("response 2nd req")))
 
     when:
-    def responseReq1 = performUiIntegration(content)
-    def responseReq2 = performUiIntegration(content)
+    def result1 = performUiIntegration(content)
+    def result2 = performUiIntegration(content)
 
     then:
-    responseReq1.body() == "response 1st req"
-    responseReq2.body() == "response 2nd req"
+    result1 == "response 1st req"
+    result2 == "response 2nd req"
   }
 
   def "should cache response based on Expires and Date header if Cache-Control header is not present"() {
@@ -675,16 +646,16 @@ abstract class BaseSpec extends Specification {
         .withBody("response 2nd req")))
 
     when:
-    def responseInitial = performUiIntegration(content)
+    def result1 = performUiIntegration(content)
     sleep(2000)
-    def responseAfter2Seconds = performUiIntegration(content)
+    def result2 = performUiIntegration(content)
     sleep(2000)
-    def responseAfter4Seconds = performUiIntegration(content)
+    def result3 = performUiIntegration(content)
 
     then:
-    responseInitial.body() == "response 1st req"
-    responseAfter2Seconds.body() == "response 1st req"
-    responseAfter4Seconds.body() == "response 2nd req"
+    result1 == "response 1st req"
+    result2 == "response 1st req"
+    result3 == "response 2nd req"
   }
 
   def "should not cache response if Cache-Control header is set but without max-age directives"() {
@@ -704,12 +675,12 @@ abstract class BaseSpec extends Specification {
         .withBody("response 2nd req")))
 
     when:
-    def responseReq1 = performUiIntegration(content)
-    def responseReq2 = performUiIntegration(content)
+    def result1 = performUiIntegration(content)
+    def result2 = performUiIntegration(content)
 
     then:
-    responseReq1.body() == "response 1st req"
-    responseReq2.body() == "response 2nd req"
+    result1 == "response 1st req"
+    result2 == "response 2nd req"
   }
 
   def "should not crash when cache headers contain invalid values"() {
@@ -719,10 +690,11 @@ abstract class BaseSpec extends Specification {
       .withBody("response")
       .withHeader(header1Name, header1Value)
       .withHeader(header2Name, header2Value)))
-    def response = performUiIntegration("<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>")
+    def result = performUiIntegration(
+      "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>")
 
     then:
-    response.body() == "response"
+    result == "response"
 
     where:
     header1Name     | header1Value                    | header2Name | header2Value
@@ -749,16 +721,20 @@ abstract class BaseSpec extends Specification {
         .withBody("response 2nd req")))
 
     when:
-    def response1 = performUiIntegration(content)
+    def result1 = performUiIntegration(content)
     sleep(2000)
-    def response2 = performUiIntegration(content)
+    def result2 = performUiIntegration(content)
 
     then:
-    response1.body() == "response 1st req"
-    response2.body() == "response 1st req"
+    result1 == "response 1st req"
+    result2 == "response 1st req"
   }
 
-  private HttpResponse<String> performUiIntegration(String content) {
+  private String performUiIntegration(String content) {
+    return performUiIntegrationRaw(content).body()
+  }
+
+  private HttpResponse<String> performUiIntegrationRaw(String content) {
     def response = httpClient.send(HttpRequest.newBuilder()
       .uri(verifyUrl)
       .POST(HttpRequest.BodyPublishers.ofString(content))
