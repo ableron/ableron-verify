@@ -7,6 +7,7 @@ import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Timeout
+import spock.lang.Unroll
 
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -80,8 +81,7 @@ abstract class BaseSpec extends Specification {
   def "should resolve includes with src attribute"() {
     given:
     wiremockServer.stubFor(get("/fragment").willReturn(ok()
-      .withBody("fragment")
-    ))
+      .withBody("fragment")))
 
     when:
     def response = httpClient.send(HttpRequest.newBuilder()
@@ -114,11 +114,9 @@ abstract class BaseSpec extends Specification {
   def "should resolve include with fallback-src if src could not be loaded"() {
     given:
     wiremockServer.stubFor(get("/src-500").willReturn(serverError()
-      .withBody("response-from-src")
-    ))
+      .withBody("response-from-src")))
     wiremockServer.stubFor(get("/fallback-src-200").willReturn(ok()
-      .withBody("response-from-fallback-src")
-    ))
+      .withBody("response-from-fallback-src")))
 
     when:
     def response = httpClient.send(HttpRequest.newBuilder()
@@ -136,11 +134,9 @@ abstract class BaseSpec extends Specification {
   def "should resolve include with fallback content if src and fallback-src could not be loaded"() {
     given:
     wiremockServer.stubFor(get("/src-500").willReturn(serverError()
-      .withBody("response-from-src")
-    ))
+      .withBody("response-from-src")))
     wiremockServer.stubFor(get("/fallback-src-404").willReturn(notFound()
-      .withBody("response-from-fallback-src")
-    ))
+      .withBody("response-from-fallback-src")))
 
     when:
     def response = httpClient.send(HttpRequest.newBuilder()
@@ -172,8 +168,7 @@ abstract class BaseSpec extends Specification {
     """
     wiremockServer.stubFor(get(urlPathMatching("/echo/.*")).willReturn(ok()
       .withBody("{{request.pathSegments.[1]}}")
-      .withTransformers("response-template")
-    ))
+      .withTransformers("response-template")))
 
     when:
     def response = httpClient.send(HttpRequest.newBuilder()
@@ -231,8 +226,7 @@ abstract class BaseSpec extends Specification {
       .toString()
     def include = "<ableron-include src=\"${wiremockAddress}/fragment\"/>"
     wiremockServer.stubFor(get("/fragment").willReturn(ok()
-      .withBody("fragment")
-    ))
+      .withBody("fragment")))
 
     when:
     def responseRandomStringWithIncludeAtTheBeginning = httpClient.send(HttpRequest.newBuilder()
@@ -313,8 +307,7 @@ abstract class BaseSpec extends Specification {
     wiremockServer.stubFor(get("/k5I9M").willReturn(ok()
       .withBody("fragment")
       .withHeader("Cache-Control", "max-age=30")
-      .withFixedDelay(200)
-    ))
+      .withFixedDelay(200)))
     wiremockServer.stubFor(get("/k5I9M_404").willReturn(notFound()))
 
     when:
@@ -361,8 +354,7 @@ abstract class BaseSpec extends Specification {
     wiremockServer.stubFor(get("/heM8d").willReturn(ok()
       .withBody("fragment")
       .withHeader("Expires", "0")
-      .withFixedDelay(200)
-    ))
+      .withFixedDelay(200)))
     wiremockServer.stubFor(get("/heM8d_404").willReturn(notFound()))
 
     when:
@@ -411,28 +403,22 @@ abstract class BaseSpec extends Specification {
     """
     wiremockServer.stubFor(get("/503").willReturn(serviceUnavailable()
       .withBody("503")
-      .withFixedDelay(2000)
-    ))
+      .withFixedDelay(2000)))
     wiremockServer.stubFor(get("/1000ms-delay").willReturn(ok()
       .withBody("response-2")
-      .withFixedDelay(1000)
-    ))
+      .withFixedDelay(1000)))
     wiremockServer.stubFor(get("/2000ms-delay").willReturn(ok()
       .withBody("response-3")
-      .withFixedDelay(2000)
-    ))
+      .withFixedDelay(2000)))
     wiremockServer.stubFor(get("/2100ms-delay").willReturn(ok()
       .withBody("response-4")
-      .withFixedDelay(2100)
-    ))
+      .withFixedDelay(2100)))
     wiremockServer.stubFor(get("/2200ms-delay").willReturn(ok()
       .withBody("response-5")
-      .withFixedDelay(2200)
-    ))
+      .withFixedDelay(2200)))
     wiremockServer.stubFor(get("/404").willReturn(notFound()
       .withBody("404")
-      .withFixedDelay(2200)
-    ))
+      .withFixedDelay(2200)))
 
     when:
     def response = httpClient.send(HttpRequest.newBuilder()
@@ -464,8 +450,7 @@ abstract class BaseSpec extends Specification {
     wiremockServer.stubFor(get("/redirect-test").willReturn(temporaryRedirect(wiremockAddress + "/redirect-test-2")))
     wiremockServer.stubFor(get("/redirect-test-2").willReturn(temporaryRedirect(wiremockAddress + "/redirect-test-3")))
     wiremockServer.stubFor(get("/redirect-test-3").willReturn(ok()
-      .withBody("response after redirect")
-    ))
+      .withBody("response after redirect")))
 
     when:
     def response = httpClient.send(HttpRequest.newBuilder()
@@ -483,8 +468,7 @@ abstract class BaseSpec extends Specification {
     wiremockServer.stubFor(get("/5500ms-delay").willReturn(ok()
       .withBody("response")
       .withHeader("Expires", "0")
-      .withFixedDelay(5500)
-    ))
+      .withFixedDelay(5500)))
 
     when:
     def response = httpClient.send(HttpRequest.newBuilder()
@@ -504,5 +488,69 @@ abstract class BaseSpec extends Specification {
     "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\"/>"                                      |""
     "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\" src-timeout-millis=\"6000\"/>"          |""
     "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\" fallback-src-timeout-millis=\"6000\"/>" |"response"
+  }
+
+  @Unroll
+  def "should cache HTTP response if status code is defined as cacheable in RFC 7231 - Status #responsStatus"() {
+    when:
+    def includeSrcPath = "/test-caching-" + UUID.randomUUID().toString()
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario("response cache test")
+      .whenScenarioStateIs("Started")
+      .willReturn(status(responsStatus)
+        .withBody(responseBody)
+        .withHeader("Cache-Control", "max-age=10"))
+      .willSetStateTo("1st req completed"))
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario("response cache test")
+      .whenScenarioStateIs("1st req completed")
+      .willReturn(ok()
+        .withBody("response 2nd req")))
+    def response1 = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(
+        "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\">:(</ableron-include>"))
+      .build(), HttpResponse.BodyHandlers.ofString())
+    def response2 = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(
+        "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\">:( 2nd req</ableron-include>"))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    response1.statusCode() == 200
+    response1.body() == expectedResult1stInclude
+    response2.statusCode() == 200
+    response2.body() == expectedResult2stInclude
+
+    where:
+    responsStatus | responseBody | expectedResponseCached | expectedResult1stInclude | expectedResult2stInclude
+    100           | "response"   | false                  | ":("                     | "response 2nd req"
+    200           | "response"   | true                   | "response"               | "response"
+    202           | "response"   | false                  | ":("                     | "response 2nd req"
+    203           | "response"   | true                   | "response"               | "response"
+    204           | ""           | true                   | ""                       | ""
+    205           | "response"   | false                  | ":("                     | "response 2nd req"
+    206           | "response"   | true                   | "response"               | "response"
+    // TODO: Testing status code 300 does not work on Java 11 because HttpClient fails with "IOException: Invalid redirection"
+    // 300           | "response"   | true                   | ":("                     | "fallback 2nd req"
+    302           | "response"   | false                  | ":("                     | "response 2nd req"
+    400           | "response"   | false                  | ":("                     | "response 2nd req"
+    404           | "response"   | true                   | ":("                     | ":( 2nd req"
+    405           | "response"   | true                   | ":("                     | ":( 2nd req"
+    410           | "response"   | true                   | ":("                     | ":( 2nd req"
+    414           | "response"   | true                   | ":("                     | ":( 2nd req"
+    500           | "response"   | false                  | ":("                     | "response 2nd req"
+    501           | "response"   | true                   | ":("                     | ":( 2nd req"
+    502           | "response"   | false                  | ":("                     | "response 2nd req"
+    503           | "response"   | false                  | ":("                     | "response 2nd req"
+    504           | "response"   | false                  | ":("                     | "response 2nd req"
+    505           | "response"   | false                  | ":("                     | "response 2nd req"
+    506           | "response"   | false                  | ":("                     | "response 2nd req"
+    507           | "response"   | false                  | ":("                     | "response 2nd req"
+    508           | "response"   | false                  | ":("                     | "response 2nd req"
+    509           | "response"   | false                  | ":("                     | "response 2nd req"
+    510           | "response"   | false                  | ":("                     | "response 2nd req"
+    511           | "response"   | false                  | ":("                     | "response 2nd req"
   }
 }
