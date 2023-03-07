@@ -62,17 +62,14 @@ abstract class BaseSpec extends Specification {
 
   def "should return content untouched if no (valid) includes are present"() {
     when:
-    def response = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def response = performUiIntegration(content)
 
     then:
     response.statusCode() == 200
-    response.body() == responseTemplate
+    response.body() == content
 
     where:
-    responseTemplate << [
+    content << [
       "test",
       "<ableron-include/>",
       "<ableron-include >",
@@ -87,17 +84,14 @@ abstract class BaseSpec extends Specification {
       .withBody("fragment")))
 
     when:
-    def response = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def response = performUiIntegration(content)
 
     then:
     response.statusCode() == 200
     response.body() == expectedResponseBody
 
     where:
-    responseTemplate                                                                       | expectedResponseBody
+    content                                                                                | expectedResponseBody
     "<ableron-include src=\"${wiremockAddress}/fragment\"/>"                               | "fragment"
     "<ableron-include src=\"${wiremockAddress}/fragment\" />"                              | "fragment"
     "<ableron-include\nsrc=\"${wiremockAddress}/fragment\"\n\n/>"                          | "fragment"
@@ -122,12 +116,8 @@ abstract class BaseSpec extends Specification {
       .withBody("response-from-fallback-src")))
 
     when:
-    def response = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(
-        "<ableron-include src=\"${wiremockAddress}/src-500\" fallback-src=\"${wiremockAddress}/fallback-src-200\"/>"
-      ))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def response = performUiIntegration(
+      "<ableron-include src=\"${wiremockAddress}/src-500\" fallback-src=\"${wiremockAddress}/fallback-src-200\"/>")
 
     then:
     response.statusCode() == 200
@@ -142,12 +132,8 @@ abstract class BaseSpec extends Specification {
       .withBody("response-from-fallback-src")))
 
     when:
-    def response = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(
-        "<ableron-include src=\"${wiremockAddress}/src-500\" fallback-src=\"${wiremockAddress}/fallback-src-404\">fallback content</ableron-include>"
-      ))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def response = performUiIntegration(
+      "<ableron-include src=\"${wiremockAddress}/src-500\" fallback-src=\"${wiremockAddress}/fallback-src-404\">fallback content</ableron-include>")
 
     then:
     response.statusCode() == 200
@@ -156,7 +142,12 @@ abstract class BaseSpec extends Specification {
 
   def "should resolve multiple includes in same response"() {
     given:
-    def responseTemplate = """
+    wiremockServer.stubFor(get(urlPathMatching("/echo/.*")).willReturn(ok()
+      .withBody("{{request.pathSegments.[1]}}")
+      .withTransformers("response-template")))
+
+    when:
+    def response = performUiIntegration("""
       <html>
       <head>
         <ableron-include src="${wiremockAddress}/echo/fragment1" />
@@ -168,16 +159,7 @@ abstract class BaseSpec extends Specification {
         <ableron-include src="${wiremockAddress}/echo/fragment3" fallback-src="https://example.com">fallback</ableron-include>
       </body>
       </html>
-    """
-    wiremockServer.stubFor(get(urlPathMatching("/echo/.*")).willReturn(ok()
-      .withBody("{{request.pathSegments.[1]}}")
-      .withTransformers("response-template")))
-
-    when:
-    def response = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    """)
 
     then:
     response.statusCode() == 200
@@ -197,19 +179,13 @@ abstract class BaseSpec extends Specification {
   }
 
   def "should replace identical includes"() {
-    given:
-    def responseTemplate = """
+    when:
+    def response = performUiIntegration("""
       <ableron-include src="foo-bar"><!-- #1 --></ableron-include>
       <ableron-include src="foo-bar"><!-- #1 --></ableron-include>
       <ableron-include src="foo-bar"><!-- #1 --></ableron-include>
       <ableron-include src="foo-bar"><!-- #2 --></ableron-include>
-    """
-
-    when:
-    def response = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    """)
 
     then:
     response.statusCode() == 200
@@ -232,18 +208,9 @@ abstract class BaseSpec extends Specification {
       .withBody("fragment")))
 
     when:
-    def responseRandomStringWithIncludeAtTheBeginning = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include + randomStringWithoutIncludes))
-      .build(), HttpResponse.BodyHandlers.ofString())
-    def responseRandomStringWithIncludeAtTheEnd = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(randomStringWithoutIncludes + include))
-      .build(), HttpResponse.BodyHandlers.ofString())
-    def responseRandomStringWithIncludeAtTheMiddle = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(randomStringWithoutIncludes + include + randomStringWithoutIncludes))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseRandomStringWithIncludeAtTheBeginning = performUiIntegration(include + randomStringWithoutIncludes)
+    def responseRandomStringWithIncludeAtTheEnd = performUiIntegration(randomStringWithoutIncludes + include)
+    def responseRandomStringWithIncludeAtTheMiddle = performUiIntegration(randomStringWithoutIncludes + include + randomStringWithoutIncludes)
 
     then:
     responseRandomStringWithIncludeAtTheBeginning.statusCode() == 200
@@ -256,10 +223,7 @@ abstract class BaseSpec extends Specification {
 
   def "should set Content-Length header to zero for empty response"() {
     when:
-    def response = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def response = performUiIntegration(content)
 
     then:
     response.statusCode() == 200
@@ -267,7 +231,7 @@ abstract class BaseSpec extends Specification {
     response.body() == expectedResponseBody
 
     where:
-    responseTemplate                                       | expectedResponseBody | expectedResponseContentLength
+    content                                                | expectedResponseBody | expectedResponseContentLength
     "<ableron-include />"                                  | ""                   | "0"
     "<ableron-include ></ableron-include>"                 | ""                   | "0"
     "<ableron-include _src=\"foo.bar\"></ableron-include>" | ""                   | "0"
@@ -276,10 +240,8 @@ abstract class BaseSpec extends Specification {
 
   def "should not crash due to #scenarioName"() {
     when:
-    def response = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString("<ableron-include >before</ableron-include>" + includeTag + "<ableron-include >after</ableron-include>"))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def response = performUiIntegration(
+      "<ableron-include >before</ableron-include>" + includeTag + "<ableron-include >after</ableron-include>")
 
     then:
     response.statusCode() == 200
@@ -294,7 +256,7 @@ abstract class BaseSpec extends Specification {
 
   def "should cache responses"() {
     given:
-    def responseTemplate = """
+    def content = """
       <html>
       <head>
         <ableron-include src="${wiremockAddress}/k5I9M"><!-- failed loading 1st include --></ableron-include>
@@ -314,10 +276,7 @@ abstract class BaseSpec extends Specification {
     wiremockServer.stubFor(get("/k5I9M_404").willReturn(notFound()))
 
     when:
-    def response = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def response = performUiIntegration(content)
 
     then:
     response.statusCode() == 200
@@ -341,7 +300,7 @@ abstract class BaseSpec extends Specification {
 
   def "should not cache responses if prohibited by Expires header"() {
     given:
-    def responseTemplate = """
+    def content = """
       <html>
       <head>
         <ableron-include src="${wiremockAddress}/heM8d"><!-- failed loading 1st include --></ableron-include>
@@ -361,10 +320,7 @@ abstract class BaseSpec extends Specification {
     wiremockServer.stubFor(get("/heM8d_404").willReturn(notFound()))
 
     when:
-    def response = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def response = performUiIntegration(content)
 
     then:
     response.statusCode() == 200
@@ -389,7 +345,7 @@ abstract class BaseSpec extends Specification {
   @Timeout(value = 7, unit = TimeUnit.SECONDS)
   def "should resolve includes in parallel"() {
     given:
-    def responseTemplate = """
+    def content = """
       <html>
       <head>
         <ableron-include src="${wiremockAddress}/503"><!-- failed loading include #1 --></ableron-include>
@@ -424,10 +380,7 @@ abstract class BaseSpec extends Specification {
       .withFixedDelay(2200)))
 
     when:
-    def response = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def response = performUiIntegration(content)
 
     then:
     response.statusCode() == 200
@@ -456,10 +409,7 @@ abstract class BaseSpec extends Specification {
       .withBody("response after redirect")))
 
     when:
-    def response = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString("<ableron-include src=\"${wiremockAddress}/redirect-test\"/>"))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def response = performUiIntegration("<ableron-include src=\"${wiremockAddress}/redirect-test\"/>")
 
     then:
     response.statusCode() == 200
@@ -474,10 +424,7 @@ abstract class BaseSpec extends Specification {
       .withFixedDelay(5500)))
 
     when:
-    def response = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def response = performUiIntegration(include)
 
     then:
     response.statusCode() == 200
@@ -509,16 +456,10 @@ abstract class BaseSpec extends Specification {
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
         .withBody("response 2nd req")))
-    def response1 = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(
-        "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\">:(</ableron-include>"))
-      .build(), HttpResponse.BodyHandlers.ofString())
-    def response2 = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(
-        "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\">:( 2nd req</ableron-include>"))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def response1 = performUiIntegration(
+      "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\">:(</ableron-include>")
+    def response2 = performUiIntegration(
+      "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\">:( 2nd req</ableron-include>")
 
     then:
     response1.statusCode() == 200
@@ -559,7 +500,7 @@ abstract class BaseSpec extends Specification {
 
   def "should cache response for s-maxage seconds if directive is present"() {
     given:
-    def include = "<ableron-include src=\"${wiremockAddress}/test-s-maxage\"/>"
+    def content = "<ableron-include src=\"${wiremockAddress}/test-s-maxage\"/>"
     wiremockServer.stubFor(get("/test-s-maxage")
       .inScenario("s-maxage test")
       .whenScenarioStateIs("Started")
@@ -576,20 +517,11 @@ abstract class BaseSpec extends Specification {
       .willSetStateTo("2nd req completed"))
 
     when:
-    def responseInitial = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseInitial = performUiIntegration(content)
     sleep(3000)
-    def responseAfter3Seconds = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseAfter3Seconds = performUiIntegration(content)
     sleep(2000)
-    def responseAfter5Seconds = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseAfter5Seconds = performUiIntegration(content)
 
     then:
     responseInitial.statusCode() == 200
@@ -602,7 +534,7 @@ abstract class BaseSpec extends Specification {
 
   def "should cache response for max-age seconds if directive is present"() {
     given:
-    def include = "<ableron-include src=\"${wiremockAddress}/test-max-age\"/>"
+    def content = "<ableron-include src=\"${wiremockAddress}/test-max-age\"/>"
     wiremockServer.stubFor(get("/test-max-age")
       .inScenario("max-age test")
       .whenScenarioStateIs("Started")
@@ -619,20 +551,11 @@ abstract class BaseSpec extends Specification {
       .willSetStateTo("2nd req completed"))
 
     when:
-    def responseInitial = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseInitial = performUiIntegration(content)
     sleep(2000)
-    def responseAfter2Seconds = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseAfter2Seconds = performUiIntegration(content)
     sleep(2000)
-    def responseAfter4Seconds = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseAfter4Seconds = performUiIntegration(content)
 
     then:
     responseInitial.statusCode() == 200
@@ -645,7 +568,7 @@ abstract class BaseSpec extends Specification {
 
   def "should cache response for max-age seconds minus Age seconds if directive is present and Age header is set"() {
     given:
-    def include = "<ableron-include src=\"${wiremockAddress}/test-max-age-and-age\"/>"
+    def content = "<ableron-include src=\"${wiremockAddress}/test-max-age-and-age\"/>"
     wiremockServer.stubFor(get("/test-max-age-and-age")
       .inScenario("max-age and age test")
       .whenScenarioStateIs("Started")
@@ -663,20 +586,11 @@ abstract class BaseSpec extends Specification {
       .willSetStateTo("2nd req completed"))
 
     when:
-    def responseInitial = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseInitial = performUiIntegration(content)
     sleep(2000)
-    def responseAfter2Seconds = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseAfter2Seconds = performUiIntegration(content)
     sleep(2000)
-    def responseAfter4Seconds = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseAfter4Seconds = performUiIntegration(content)
 
     then:
     responseInitial.statusCode() == 200
@@ -691,7 +605,7 @@ abstract class BaseSpec extends Specification {
     given:
     def dateTimeFormatter = DateTimeFormatter.RFC_1123_DATE_TIME
       .withZone(ZoneId.of("GMT"))
-    def include = "<ableron-include src=\"${wiremockAddress}/test-expires-header\"/>"
+    def content = "<ableron-include src=\"${wiremockAddress}/test-expires-header\"/>"
     wiremockServer.stubFor(get("/test-expires-header")
       .inScenario("expires header test")
       .whenScenarioStateIs("Started")
@@ -708,20 +622,11 @@ abstract class BaseSpec extends Specification {
       .willSetStateTo("2nd req completed"))
 
     when:
-    def responseInitial = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseInitial = performUiIntegration(content)
     sleep(2000)
-    def responseAfter2Seconds = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseAfter2Seconds = performUiIntegration(content)
     sleep(2000)
-    def responseAfter4Seconds = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseAfter4Seconds = performUiIntegration(content)
 
     then:
     responseInitial.statusCode() == 200
@@ -734,7 +639,7 @@ abstract class BaseSpec extends Specification {
 
   def "should handle Expires header with value 0"() {
     given:
-    def include = "<ableron-include src=\"${wiremockAddress}/test-expires-header-0\"/>"
+    def content = "<ableron-include src=\"${wiremockAddress}/test-expires-header-0\"/>"
     wiremockServer.stubFor(get("/test-expires-header-0")
       .inScenario("expires 0 header test")
       .whenScenarioStateIs("Started")
@@ -749,14 +654,8 @@ abstract class BaseSpec extends Specification {
         .withBody("response 2nd req")))
 
     when:
-    def responseReq1 = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
-    def responseReq2 = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseReq1 = performUiIntegration(content)
+    def responseReq2 = performUiIntegration(content)
 
     then:
     responseReq1.statusCode() == 200
@@ -767,7 +666,7 @@ abstract class BaseSpec extends Specification {
 
   def "should treat http header names as case insensitive"() {
     given:
-    def include = "<ableron-include src=\"${wiremockAddress}/test-case-insensitive-header-names\"/>"
+    def content = "<ableron-include src=\"${wiremockAddress}/test-case-insensitive-header-names\"/>"
     wiremockServer.stubFor(get("/test-case-insensitive-header-names")
       .inScenario("case insensitive header names test")
       .whenScenarioStateIs("Started")
@@ -782,14 +681,8 @@ abstract class BaseSpec extends Specification {
         .withBody("response 2nd req")))
 
     when:
-    def responseReq1 = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
-    def responseReq2 = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseReq1 = performUiIntegration(content)
+    def responseReq2 = performUiIntegration(content)
 
     then:
     responseReq1.statusCode() == 200
@@ -800,7 +693,7 @@ abstract class BaseSpec extends Specification {
 
   def "should cache response based on Expires and Date header if Cache-Control header is not present"() {
     given:
-    def include = "<ableron-include src=\"${wiremockAddress}/test-expires-and-date-headers\"/>"
+    def content = "<ableron-include src=\"${wiremockAddress}/test-expires-and-date-headers\"/>"
     wiremockServer.stubFor(get("/test-expires-and-date-headers")
       .inScenario("expires and date headers test")
       .whenScenarioStateIs("Started")
@@ -816,11 +709,11 @@ abstract class BaseSpec extends Specification {
         .withBody("response 2nd req")))
 
     when:
-    def responseInitial = performUiIntegration(include)
+    def responseInitial = performUiIntegration(content)
     sleep(2000)
-    def responseAfter2Seconds = performUiIntegration(include)
+    def responseAfter2Seconds = performUiIntegration(content)
     sleep(2000)
-    def responseAfter4Seconds = performUiIntegration(include)
+    def responseAfter4Seconds = performUiIntegration(content)
 
     then:
     responseInitial.statusCode() == 200
@@ -833,7 +726,7 @@ abstract class BaseSpec extends Specification {
 
   def "should not cache response if Cache-Control header is set but without max-age directives"() {
     given:
-    def include = "<ableron-include src=\"${wiremockAddress}/test-cache-control-no-max-age\"/>"
+    def content = "<ableron-include src=\"${wiremockAddress}/test-cache-control-no-max-age\"/>"
     wiremockServer.stubFor(get("/test-cache-control-no-max-age")
       .inScenario("cache-control no max-age test")
       .whenScenarioStateIs("Started")
@@ -848,14 +741,8 @@ abstract class BaseSpec extends Specification {
         .withBody("response 2nd req")))
 
     when:
-    def responseReq1 = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
-    def responseReq2 = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseReq1 = performUiIntegration(content)
+    def responseReq2 = performUiIntegration(content)
 
     then:
     responseReq1.statusCode() == 200
@@ -871,10 +758,7 @@ abstract class BaseSpec extends Specification {
       .withBody("response")
       .withHeader(header1Name, header1Value)
       .withHeader(header2Name, header2Value)))
-    def response = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString("<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def response = performUiIntegration("<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>")
 
     then:
     response.statusCode() == 200
@@ -891,7 +775,7 @@ abstract class BaseSpec extends Specification {
 
   def "should cache response if no expiration time is indicated via response header"() {
     given:
-    def include = "<ableron-include src=\"${wiremockAddress}/test-default-response-caching\"/>"
+    def content = "<ableron-include src=\"${wiremockAddress}/test-default-response-caching\"/>"
     wiremockServer.stubFor(get("/test-default-response-caching")
       .inScenario("default response caching test")
       .whenScenarioStateIs("Started")
@@ -905,15 +789,9 @@ abstract class BaseSpec extends Specification {
         .withBody("response 2nd req")))
 
     when:
-    def response1 = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def response1 = performUiIntegration(content)
     sleep(2000)
-    def response2 = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def response2 = performUiIntegration(content)
 
     then:
     response1.statusCode() == 200
@@ -922,10 +800,10 @@ abstract class BaseSpec extends Specification {
     response2.body() == "response 1st req"
   }
 
-  private HttpResponse<String> performUiIntegration(String responseTemplate) {
+  private HttpResponse<String> performUiIntegration(String content) {
     return httpClient.send(HttpRequest.newBuilder()
       .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
+      .POST(HttpRequest.BodyPublishers.ofString(content))
       .build(), HttpResponse.BodyHandlers.ofString())
   }
 }
