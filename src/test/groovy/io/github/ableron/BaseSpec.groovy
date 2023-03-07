@@ -553,4 +553,90 @@ abstract class BaseSpec extends Specification {
     510           | "response"   | false                  | ":("                     | "response 2nd req"
     511           | "response"   | false                  | ":("                     | "response 2nd req"
   }
+
+  def "should cache response for s-maxage seconds if directive is present"() {
+    given:
+    def include = "<ableron-include src=\"${wiremockAddress}/test-s-maxage\"/>"
+    wiremockServer.stubFor(get("/test-s-maxage")
+      .inScenario("s-maxage test")
+      .whenScenarioStateIs("Started")
+      .willReturn(ok()
+        .withBody("response 1st req")
+        .withHeader("Cache-Control", "max-age=2, s-maxage=4 , public")
+        .withHeader("Expires", "Wed, 21 Oct 2015 07:28:00 GMT"))
+      .willSetStateTo("1st req completed"))
+    wiremockServer.stubFor(get("/test-s-maxage")
+      .inScenario("s-maxage test")
+      .whenScenarioStateIs("1st req completed")
+      .willReturn(ok()
+        .withBody("response 2nd req"))
+      .willSetStateTo("2nd req completed"))
+
+    when:
+    def responseInitial = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+    sleep(3000)
+    def responseAfter3Second = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+    sleep(2000)
+    def responseAfter5Second = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    responseInitial.statusCode() == 200
+    responseInitial.body() == "response 1st req"
+    responseAfter3Second.statusCode() == 200
+    responseAfter3Second.body() == "response 1st req"
+    responseAfter5Second.statusCode() == 200
+    responseAfter5Second.body() == "response 2nd req"
+  }
+
+  def "should cache response for max-age seconds if directive is present"() {
+    given:
+    def include = "<ableron-include src=\"${wiremockAddress}/test-max-age\"/>"
+    wiremockServer.stubFor(get("/test-max-age")
+      .inScenario("max-age test")
+      .whenScenarioStateIs("Started")
+      .willReturn(ok()
+        .withBody("response 1st req")
+        .withHeader("Cache-Control", "max-age=3")
+        .withHeader("Expires", "Wed, 21 Oct 2015 07:28:00 GMT"))
+      .willSetStateTo("1st req completed"))
+    wiremockServer.stubFor(get("/test-max-age")
+      .inScenario("max-age test")
+      .whenScenarioStateIs("1st req completed")
+      .willReturn(ok()
+        .withBody("response 2nd req"))
+      .willSetStateTo("2nd req completed"))
+
+    when:
+    def responseInitial = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+    sleep(2000)
+    def responseAfter2Second = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+    sleep(2000)
+    def responseAfter4Second = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    responseInitial.statusCode() == 200
+    responseInitial.body() == "response 1st req"
+    responseAfter2Second.statusCode() == 200
+    responseAfter2Second.body() == "response 1st req"
+    responseAfter4Second.statusCode() == 200
+    responseAfter4Second.body() == "response 2nd req"
+  }
 }
