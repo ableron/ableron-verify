@@ -797,4 +797,46 @@ abstract class BaseSpec extends Specification {
     responseReq2.statusCode() == 200
     responseReq2.body() == "response 2nd req"
   }
+
+  def "should cache response based on Expires and Date header if Cache-Control header is not present"() {
+    given:
+    def include = "<ableron-include src=\"${wiremockAddress}/test-expires-and-date-headers\"/>"
+    wiremockServer.stubFor(get("/test-expires-and-date-headers")
+      .inScenario("expires and date headers test")
+      .whenScenarioStateIs("Started")
+      .willReturn(ok()
+        .withBody("response 1st req")
+        .withHeader("Date", "Wed, 12 Oct 2050 07:27:57 GMT")
+        .withHeader("Expires", "Wed, 12 Oct 2050 07:28:00 GMT"))
+      .willSetStateTo("1st req completed"))
+    wiremockServer.stubFor(get("/test-expires-and-date-headers")
+      .inScenario("expires and date headers test")
+      .whenScenarioStateIs("1st req completed")
+      .willReturn(ok()
+        .withBody("response 2nd req")))
+
+    when:
+    def responseInitial = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+    sleep(2000)
+    def responseAfter2Seconds = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+    sleep(2000)
+    def responseAfter4Seconds = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    responseInitial.statusCode() == 200
+    responseInitial.body() == "response 1st req"
+    responseAfter2Seconds.statusCode() == 200
+    responseAfter2Seconds.body() == "response 1st req"
+    responseAfter4Seconds.statusCode() == 200
+    responseAfter4Seconds.body() == "response 2nd req"
+  }
 }
