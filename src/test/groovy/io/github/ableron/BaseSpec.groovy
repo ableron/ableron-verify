@@ -482,12 +482,12 @@ abstract class BaseSpec extends Specification {
 
     where:
     include                                                                                                    | expectedResolvedInclude
-    "<ableron-include src=\"${wiremockAddress}/5500ms-delay\"/>"                                               |""
-    "<ableron-include src=\"${wiremockAddress}/5500ms-delay\" src-timeout-millis=\"6000\"/>"                   |"response"
-    "<ableron-include src=\"${wiremockAddress}/5500ms-delay\" fallback-src-timeout-millis=\"6000\"/>"          |""
-    "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\"/>"                                      |""
-    "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\" src-timeout-millis=\"6000\"/>"          |""
-    "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\" fallback-src-timeout-millis=\"6000\"/>" |"response"
+    "<ableron-include src=\"${wiremockAddress}/5500ms-delay\"/>"                                               | ""
+    "<ableron-include src=\"${wiremockAddress}/5500ms-delay\" src-timeout-millis=\"6000\"/>"                   | "response"
+    "<ableron-include src=\"${wiremockAddress}/5500ms-delay\" fallback-src-timeout-millis=\"6000\"/>"          | ""
+    "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\"/>"                                      | ""
+    "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\" src-timeout-millis=\"6000\"/>"          | ""
+    "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\" fallback-src-timeout-millis=\"6000\"/>" | "response"
   }
 
   @Unroll
@@ -638,5 +638,38 @@ abstract class BaseSpec extends Specification {
     responseAfter2Second.body() == "response 1st req"
     responseAfter4Second.statusCode() == 200
     responseAfter4Second.body() == "response 2nd req"
+  }
+
+  def "should treat http header names as case insensitive"() {
+    given:
+    def include = "<ableron-include src=\"${wiremockAddress}/test-case-insensitive-header-names\"/>"
+    wiremockServer.stubFor(get("/test-case-insensitive-header-names")
+      .inScenario("case insensitive header names test")
+      .whenScenarioStateIs("Started")
+      .willReturn(ok()
+        .withBody("response 1st req")
+        .withHeader("EXpIRes", "0"))
+      .willSetStateTo("1st req completed"))
+    wiremockServer.stubFor(get("/test-case-insensitive-header-names")
+      .inScenario("case insensitive header names test")
+      .whenScenarioStateIs("1st req completed")
+      .willReturn(ok()
+        .withBody("response 2nd req")))
+
+    when:
+    def responseReq1 = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseReq2 = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    responseReq1.statusCode() == 200
+    responseReq1.body() == "response 1st req"
+    responseReq2.statusCode() == 200
+    responseReq2.body() == "response 2nd req"
   }
 }
