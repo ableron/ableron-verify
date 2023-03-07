@@ -65,7 +65,6 @@ abstract class BaseSpec extends Specification {
     def response = performUiIntegration(content)
 
     then:
-    response.statusCode() == 200
     response.body() == content
 
     where:
@@ -87,7 +86,6 @@ abstract class BaseSpec extends Specification {
     def response = performUiIntegration(content)
 
     then:
-    response.statusCode() == 200
     response.body() == expectedResponseBody
 
     where:
@@ -120,7 +118,6 @@ abstract class BaseSpec extends Specification {
       "<ableron-include src=\"${wiremockAddress}/src-500\" fallback-src=\"${wiremockAddress}/fallback-src-200\"/>")
 
     then:
-    response.statusCode() == 200
     response.body() == "response-from-fallback-src"
   }
 
@@ -136,7 +133,6 @@ abstract class BaseSpec extends Specification {
       "<ableron-include src=\"${wiremockAddress}/src-500\" fallback-src=\"${wiremockAddress}/fallback-src-404\">fallback content</ableron-include>")
 
     then:
-    response.statusCode() == 200
     response.body() == "fallback content"
   }
 
@@ -162,7 +158,6 @@ abstract class BaseSpec extends Specification {
     """)
 
     then:
-    response.statusCode() == 200
     response.body() == """
       <html>
       <head>
@@ -188,7 +183,6 @@ abstract class BaseSpec extends Specification {
     """)
 
     then:
-    response.statusCode() == 200
     response.body() == """
       <!-- #1 -->
       <!-- #1 -->
@@ -213,11 +207,8 @@ abstract class BaseSpec extends Specification {
     def responseRandomStringWithIncludeAtTheMiddle = performUiIntegration(randomStringWithoutIncludes + include + randomStringWithoutIncludes)
 
     then:
-    responseRandomStringWithIncludeAtTheBeginning.statusCode() == 200
     responseRandomStringWithIncludeAtTheBeginning.body() == "fragment" + randomStringWithoutIncludes
-    responseRandomStringWithIncludeAtTheEnd.statusCode() == 200
     responseRandomStringWithIncludeAtTheEnd.body() == randomStringWithoutIncludes + "fragment"
-    responseRandomStringWithIncludeAtTheMiddle.statusCode() == 200
     responseRandomStringWithIncludeAtTheMiddle.body() == randomStringWithoutIncludes + "fragment" + randomStringWithoutIncludes
   }
 
@@ -226,7 +217,6 @@ abstract class BaseSpec extends Specification {
     def response = performUiIntegration(content)
 
     then:
-    response.statusCode() == 200
     response.headers().firstValue("Content-Length") == Optional.of(expectedResponseContentLength)
     response.body() == expectedResponseBody
 
@@ -244,7 +234,6 @@ abstract class BaseSpec extends Specification {
       "<ableron-include >before</ableron-include>" + includeTag + "<ableron-include >after</ableron-include>")
 
     then:
-    response.statusCode() == 200
     response.body() == "before" + expectedResult + "after"
 
     where:
@@ -279,7 +268,6 @@ abstract class BaseSpec extends Specification {
     def response = performUiIntegration(content)
 
     then:
-    response.statusCode() == 200
     response.body() == """
       <html>
       <head>
@@ -323,7 +311,6 @@ abstract class BaseSpec extends Specification {
     def response = performUiIntegration(content)
 
     then:
-    response.statusCode() == 200
     response.body() == """
       <html>
       <head>
@@ -383,7 +370,6 @@ abstract class BaseSpec extends Specification {
     def response = performUiIntegration(content)
 
     then:
-    response.statusCode() == 200
     response.body() == """
       <html>
       <head>
@@ -412,7 +398,6 @@ abstract class BaseSpec extends Specification {
     def response = performUiIntegration("<ableron-include src=\"${wiremockAddress}/redirect-test\"/>")
 
     then:
-    response.statusCode() == 200
     response.body() == "response after redirect"
   }
 
@@ -427,7 +412,6 @@ abstract class BaseSpec extends Specification {
     def response = performUiIntegration(include)
 
     then:
-    response.statusCode() == 200
     response.body() == expectedResolvedInclude
 
     where:
@@ -462,9 +446,7 @@ abstract class BaseSpec extends Specification {
       "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\">:( 2nd req</ableron-include>")
 
     then:
-    response1.statusCode() == 200
     response1.body() == expectedResult1stInclude
-    response2.statusCode() == 200
     response2.body() == expectedResult2stInclude
 
     where:
@@ -524,11 +506,8 @@ abstract class BaseSpec extends Specification {
     def responseAfter5Seconds = performUiIntegration(content)
 
     then:
-    responseInitial.statusCode() == 200
     responseInitial.body() == "response 1st req"
-    responseAfter3Seconds.statusCode() == 200
     responseAfter3Seconds.body() == "response 1st req"
-    responseAfter5Seconds.statusCode() == 200
     responseAfter5Seconds.body() == "response 2nd req"
   }
 
@@ -558,11 +537,8 @@ abstract class BaseSpec extends Specification {
     def responseAfter4Seconds = performUiIntegration(content)
 
     then:
-    responseInitial.statusCode() == 200
     responseInitial.body() == "response 1st req"
-    responseAfter2Seconds.statusCode() == 200
     responseAfter2Seconds.body() == "response 1st req"
-    responseAfter4Seconds.statusCode() == 200
     responseAfter4Seconds.body() == "response 2nd req"
   }
 
@@ -593,11 +569,8 @@ abstract class BaseSpec extends Specification {
     def responseAfter4Seconds = performUiIntegration(content)
 
     then:
-    responseInitial.statusCode() == 200
     responseInitial.body() == "response 1st req"
-    responseAfter2Seconds.statusCode() == 200
     responseAfter2Seconds.body() == "response 1st req"
-    responseAfter4Seconds.statusCode() == 200
     responseAfter4Seconds.body() == "response 2nd req"
   }
 
@@ -629,11 +602,8 @@ abstract class BaseSpec extends Specification {
     def responseAfter4Seconds = performUiIntegration(content)
 
     then:
-    responseInitial.statusCode() == 200
     responseInitial.body() == "response 1st req"
-    responseAfter2Seconds.statusCode() == 200
     responseAfter2Seconds.body() == "response 1st req"
-    responseAfter4Seconds.statusCode() == 200
     responseAfter4Seconds.body() == "response 2nd req"
   }
 
@@ -658,9 +628,7 @@ abstract class BaseSpec extends Specification {
     def responseReq2 = performUiIntegration(content)
 
     then:
-    responseReq1.statusCode() == 200
     responseReq1.body() == "response 1st req"
-    responseReq2.statusCode() == 200
     responseReq2.body() == "response 2nd req"
   }
 
@@ -685,9 +653,7 @@ abstract class BaseSpec extends Specification {
     def responseReq2 = performUiIntegration(content)
 
     then:
-    responseReq1.statusCode() == 200
     responseReq1.body() == "response 1st req"
-    responseReq2.statusCode() == 200
     responseReq2.body() == "response 2nd req"
   }
 
@@ -716,11 +682,8 @@ abstract class BaseSpec extends Specification {
     def responseAfter4Seconds = performUiIntegration(content)
 
     then:
-    responseInitial.statusCode() == 200
     responseInitial.body() == "response 1st req"
-    responseAfter2Seconds.statusCode() == 200
     responseAfter2Seconds.body() == "response 1st req"
-    responseAfter4Seconds.statusCode() == 200
     responseAfter4Seconds.body() == "response 2nd req"
   }
 
@@ -745,9 +708,7 @@ abstract class BaseSpec extends Specification {
     def responseReq2 = performUiIntegration(content)
 
     then:
-    responseReq1.statusCode() == 200
     responseReq1.body() == "response 1st req"
-    responseReq2.statusCode() == 200
     responseReq2.body() == "response 2nd req"
   }
 
@@ -761,7 +722,6 @@ abstract class BaseSpec extends Specification {
     def response = performUiIntegration("<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>")
 
     then:
-    response.statusCode() == 200
     response.body() == "response"
 
     where:
@@ -794,16 +754,16 @@ abstract class BaseSpec extends Specification {
     def response2 = performUiIntegration(content)
 
     then:
-    response1.statusCode() == 200
     response1.body() == "response 1st req"
-    response2.statusCode() == 200
     response2.body() == "response 1st req"
   }
 
   private HttpResponse<String> performUiIntegration(String content) {
-    return httpClient.send(HttpRequest.newBuilder()
+    def response = httpClient.send(HttpRequest.newBuilder()
       .uri(verifyUrl)
       .POST(HttpRequest.BodyPublishers.ofString(content))
       .build(), HttpResponse.BodyHandlers.ofString())
+    assert response.statusCode() == 200
+    return response
   }
 }
