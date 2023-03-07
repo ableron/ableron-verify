@@ -889,6 +889,39 @@ abstract class BaseSpec extends Specification {
     "Expires"       | "Wed, 12 Oct 2050 07:28:00 GMT" | "Date"      | "not-a-date"
   }
 
+  def "should cache response if no expiration time is indicated via response header"() {
+    given:
+    def include = "<ableron-include src=\"${wiremockAddress}/test-default-response-caching\"/>"
+    wiremockServer.stubFor(get("/test-default-response-caching")
+      .inScenario("default response caching test")
+      .whenScenarioStateIs("Started")
+      .willReturn(ok()
+        .withBody("response 1st req"))
+      .willSetStateTo("1st req completed"))
+    wiremockServer.stubFor(get("/test-default-response-caching")
+      .inScenario("default response caching test")
+      .whenScenarioStateIs("1st req completed")
+      .willReturn(ok()
+        .withBody("response 2nd req")))
+
+    when:
+    def response1 = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+    sleep(2000)
+    def response2 = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    response1.statusCode() == 200
+    response1.body() == "response 1st req"
+    response2.statusCode() == 200
+    response2.body() == "response 1st req"
+  }
+
   private HttpResponse<String> performUiIntegration(String responseTemplate) {
     return httpClient.send(HttpRequest.newBuilder()
       .uri(verifyUrl)
