@@ -816,20 +816,11 @@ abstract class BaseSpec extends Specification {
         .withBody("response 2nd req")))
 
     when:
-    def responseInitial = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseInitial = performUiIntegration(include)
     sleep(2000)
-    def responseAfter2Seconds = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseAfter2Seconds = performUiIntegration(include)
     sleep(2000)
-    def responseAfter4Seconds = httpClient.send(HttpRequest.newBuilder()
-      .uri(verifyUrl)
-      .POST(HttpRequest.BodyPublishers.ofString(include))
-      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseAfter4Seconds = performUiIntegration(include)
 
     then:
     responseInitial.statusCode() == 200
@@ -838,5 +829,45 @@ abstract class BaseSpec extends Specification {
     responseAfter2Seconds.body() == "response 1st req"
     responseAfter4Seconds.statusCode() == 200
     responseAfter4Seconds.body() == "response 2nd req"
+  }
+
+  def "should not cache response if Cache-Control header is set but without max-age directives"() {
+    given:
+    def include = "<ableron-include src=\"${wiremockAddress}/test-cache-control-no-max-age\"/>"
+    wiremockServer.stubFor(get("/test-cache-control-no-max-age")
+      .inScenario("cache-control no max-age test")
+      .whenScenarioStateIs("Started")
+      .willReturn(ok()
+        .withBody("response 1st req")
+        .withHeader("Cache-Control", "no-cache,no-store,must-revalidate"))
+      .willSetStateTo("1st req completed"))
+    wiremockServer.stubFor(get("/test-cache-control-no-max-age")
+      .inScenario("cache-control no max-age test")
+      .whenScenarioStateIs("1st req completed")
+      .willReturn(ok()
+        .withBody("response 2nd req")))
+
+    when:
+    def responseReq1 = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+    def responseReq2 = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    responseReq1.statusCode() == 200
+    responseReq1.body() == "response 1st req"
+    responseReq2.statusCode() == 200
+    responseReq2.body() == "response 2nd req"
+  }
+
+  private HttpResponse<String> performUiIntegration(String responseTemplate) {
+    return httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(responseTemplate))
+      .build(), HttpResponse.BodyHandlers.ofString())
   }
 }
