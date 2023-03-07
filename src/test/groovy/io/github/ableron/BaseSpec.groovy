@@ -460,7 +460,7 @@ abstract class BaseSpec extends Specification {
       .whenScenarioStateIs("Started")
       .willReturn(ok()
         .withBody("response 1st req")
-        .withHeader("Cache-Control", "max-age=2, s-maxage=4 , public")
+        .withHeader("Cache-Control", "max-age=2, s-maxage=6 , public")
         .withHeader("Expires", "Wed, 21 Oct 2015 07:28:00 GMT"))
       .willSetStateTo("1st req completed"))
     wiremockServer.stubFor(get(includeSrcPath)
@@ -472,9 +472,9 @@ abstract class BaseSpec extends Specification {
 
     when:
     def result1 = performUiIntegration(content)
-    sleep(3000)
+    sleep(4000)
     def result2 = performUiIntegration(content)
-    sleep(2000)
+    sleep(4000)
     def result3 = performUiIntegration(content)
 
     then:
@@ -506,7 +506,7 @@ abstract class BaseSpec extends Specification {
     def result1 = performUiIntegration(content)
     sleep(2000)
     def result2 = performUiIntegration(content)
-    sleep(2000)
+    sleep(3000)
     def result3 = performUiIntegration(content)
 
     then:
@@ -539,7 +539,7 @@ abstract class BaseSpec extends Specification {
     def result1 = performUiIntegration(content)
     sleep(2000)
     def result2 = performUiIntegration(content)
-    sleep(2000)
+    sleep(3000)
     def result3 = performUiIntegration(content)
 
     then:
@@ -573,7 +573,7 @@ abstract class BaseSpec extends Specification {
     def result1 = performUiIntegration(content)
     sleep(2000)
     def result2 = performUiIntegration(content)
-    sleep(2000)
+    sleep(3000)
     def result3 = performUiIntegration(content)
 
     then:
@@ -656,7 +656,7 @@ abstract class BaseSpec extends Specification {
     def result1 = performUiIntegration(content)
     sleep(2000)
     def result2 = performUiIntegration(content)
-    sleep(2000)
+    sleep(3000)
     def result3 = performUiIntegration(content)
 
     then:
