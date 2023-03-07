@@ -578,12 +578,12 @@ abstract class BaseSpec extends Specification {
       .POST(HttpRequest.BodyPublishers.ofString(include))
       .build(), HttpResponse.BodyHandlers.ofString())
     sleep(3000)
-    def responseAfter3Second = httpClient.send(HttpRequest.newBuilder()
+    def responseAfter3Seconds = httpClient.send(HttpRequest.newBuilder()
       .uri(verifyUrl)
       .POST(HttpRequest.BodyPublishers.ofString(include))
       .build(), HttpResponse.BodyHandlers.ofString())
     sleep(2000)
-    def responseAfter5Second = httpClient.send(HttpRequest.newBuilder()
+    def responseAfter5Seconds = httpClient.send(HttpRequest.newBuilder()
       .uri(verifyUrl)
       .POST(HttpRequest.BodyPublishers.ofString(include))
       .build(), HttpResponse.BodyHandlers.ofString())
@@ -591,10 +591,10 @@ abstract class BaseSpec extends Specification {
     then:
     responseInitial.statusCode() == 200
     responseInitial.body() == "response 1st req"
-    responseAfter3Second.statusCode() == 200
-    responseAfter3Second.body() == "response 1st req"
-    responseAfter5Second.statusCode() == 200
-    responseAfter5Second.body() == "response 2nd req"
+    responseAfter3Seconds.statusCode() == 200
+    responseAfter3Seconds.body() == "response 1st req"
+    responseAfter5Seconds.statusCode() == 200
+    responseAfter5Seconds.body() == "response 2nd req"
   }
 
   def "should cache response for max-age seconds if directive is present"() {
@@ -621,12 +621,12 @@ abstract class BaseSpec extends Specification {
       .POST(HttpRequest.BodyPublishers.ofString(include))
       .build(), HttpResponse.BodyHandlers.ofString())
     sleep(2000)
-    def responseAfter2Second = httpClient.send(HttpRequest.newBuilder()
+    def responseAfter2Seconds = httpClient.send(HttpRequest.newBuilder()
       .uri(verifyUrl)
       .POST(HttpRequest.BodyPublishers.ofString(include))
       .build(), HttpResponse.BodyHandlers.ofString())
     sleep(2000)
-    def responseAfter4Second = httpClient.send(HttpRequest.newBuilder()
+    def responseAfter4Seconds = httpClient.send(HttpRequest.newBuilder()
       .uri(verifyUrl)
       .POST(HttpRequest.BodyPublishers.ofString(include))
       .build(), HttpResponse.BodyHandlers.ofString())
@@ -634,10 +634,54 @@ abstract class BaseSpec extends Specification {
     then:
     responseInitial.statusCode() == 200
     responseInitial.body() == "response 1st req"
-    responseAfter2Second.statusCode() == 200
-    responseAfter2Second.body() == "response 1st req"
-    responseAfter4Second.statusCode() == 200
-    responseAfter4Second.body() == "response 2nd req"
+    responseAfter2Seconds.statusCode() == 200
+    responseAfter2Seconds.body() == "response 1st req"
+    responseAfter4Seconds.statusCode() == 200
+    responseAfter4Seconds.body() == "response 2nd req"
+  }
+
+  def "should cache response for max-age seconds minus Age seconds if directive is present and Age header is set"() {
+    given:
+    def include = "<ableron-include src=\"${wiremockAddress}/test-max-age-and-age\"/>"
+    wiremockServer.stubFor(get("/test-max-age-and-age")
+      .inScenario("max-age and age test")
+      .whenScenarioStateIs("Started")
+      .willReturn(ok()
+        .withBody("response 1st req")
+        .withHeader("Cache-Control", "max-age=3600")
+        .withHeader("Age", "3597")
+        .withHeader("Expires", "Wed, 21 Oct 2015 07:28:00 GMT"))
+      .willSetStateTo("1st req completed"))
+    wiremockServer.stubFor(get("/test-max-age-and-age")
+      .inScenario("max-age and age test")
+      .whenScenarioStateIs("1st req completed")
+      .willReturn(ok()
+        .withBody("response 2nd req"))
+      .willSetStateTo("2nd req completed"))
+
+    when:
+    def responseInitial = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+    sleep(2000)
+    def responseAfter2Seconds = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+    sleep(2000)
+    def responseAfter4Seconds = httpClient.send(HttpRequest.newBuilder()
+      .uri(verifyUrl)
+      .POST(HttpRequest.BodyPublishers.ofString(include))
+      .build(), HttpResponse.BodyHandlers.ofString())
+
+    then:
+    responseInitial.statusCode() == 200
+    responseInitial.body() == "response 1st req"
+    responseAfter2Seconds.statusCode() == 200
+    responseAfter2Seconds.body() == "response 1st req"
+    responseAfter4Seconds.statusCode() == 200
+    responseAfter4Seconds.body() == "response 2nd req"
   }
 
   def "should treat http header names as case insensitive"() {
