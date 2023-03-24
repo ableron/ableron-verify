@@ -103,22 +103,22 @@ abstract class BaseSpec extends Specification {
   def "should resolve include with fallback-src if src could not be loaded"() {
     given:
     wiremockServer.stubFor(get("/src-500").willReturn(serverError()
-      .withBody("response-from-src")))
+      .withBody("fragment from src")))
     wiremockServer.stubFor(get("/fallback-src-200").willReturn(ok()
-      .withBody("response-from-fallback-src")))
+      .withBody("fragment from fallback-src")))
 
     expect:
     performUiIntegration(
       "<ableron-include src=\"${wiremockAddress}/src-500\" fallback-src=\"${wiremockAddress}/fallback-src-200\"/>"
-    ) == "response-from-fallback-src"
+    ) == "fragment from fallback-src"
   }
 
   def "should resolve include with fallback content if src and fallback-src could not be loaded"() {
     given:
     wiremockServer.stubFor(get("/src-500").willReturn(serverError()
-      .withBody("response-from-src")))
+      .withBody("fragment from src")))
     wiremockServer.stubFor(get("/fallback-src-404").willReturn(notFound()
-      .withBody("response-from-fallback-src")))
+      .withBody("fragment from fallback-src")))
 
     expect:
     performUiIntegration(
@@ -225,7 +225,7 @@ abstract class BaseSpec extends Specification {
     "invalid fallback-src timeout" | '<ableron-include fallback-src-timeout-millis="5s">fallback</ableron-include>' | "fallback"
   }
 
-  def "should cache responses"() {
+  def "should cache fragments"() {
     given:
     wiremockServer.stubFor(get("/k5I9M").willReturn(ok()
       .withBody("fragment")
@@ -264,7 +264,7 @@ abstract class BaseSpec extends Specification {
     wiremockServer.verify(1, getRequestedFor(urlEqualTo("/k5I9M_404")))
   }
 
-  def "should not cache responses if prohibited by Expires header"() {
+  def "should not cache fragments if prohibited by Expires header"() {
     given:
     wiremockServer.stubFor(get("/heM8d").willReturn(ok()
       .withBody("fragment")
@@ -310,16 +310,16 @@ abstract class BaseSpec extends Specification {
       .withBody("503")
       .withFixedDelay(2000)))
     wiremockServer.stubFor(get("/1000ms-delay").willReturn(ok()
-      .withBody("response-2")
+      .withBody("fragment-2")
       .withFixedDelay(1000)))
     wiremockServer.stubFor(get("/2000ms-delay").willReturn(ok()
-      .withBody("response-3")
+      .withBody("fragment-3")
       .withFixedDelay(2000)))
     wiremockServer.stubFor(get("/2100ms-delay").willReturn(ok()
-      .withBody("response-4")
+      .withBody("fragment-4")
       .withFixedDelay(2100)))
     wiremockServer.stubFor(get("/2200ms-delay").willReturn(ok()
-      .withBody("response-5")
+      .withBody("fragment-5")
       .withFixedDelay(2200)))
     wiremockServer.stubFor(get("/404").willReturn(notFound()
       .withBody("404")
@@ -329,29 +329,29 @@ abstract class BaseSpec extends Specification {
     performUiIntegration("""
       <html>
       <head>
-        <ableron-include src="${wiremockAddress}/503"><!-- failed loading include #1 --></ableron-include>
+        <ableron-include src="${wiremockAddress}/503"><!-- failed loading fragment #1 --></ableron-include>
         <title>Foo</title>
-        <ableron-include src="${wiremockAddress}/1000ms-delay"><!-- failed loading include #2 --></ableron-include>
+        <ableron-include src="${wiremockAddress}/1000ms-delay"><!-- failed loading fragment #2 --></ableron-include>
       </head>
       <body>
-        <ableron-include src="${wiremockAddress}/2000ms-delay"><!-- failed loading include #3 --></ableron-include>
-        <ableron-include src="${wiremockAddress}/2100ms-delay"><!-- failed loading include #4 --></ableron-include>
-        <ableron-include src="${wiremockAddress}/2200ms-delay"><!-- failed loading include #5 --></ableron-include>
-        <ableron-include src="${wiremockAddress}/404"><!-- failed loading include #6 --></ableron-include>
+        <ableron-include src="${wiremockAddress}/2000ms-delay"><!-- failed loading fragment #3 --></ableron-include>
+        <ableron-include src="${wiremockAddress}/2100ms-delay"><!-- failed loading fragment #4 --></ableron-include>
+        <ableron-include src="${wiremockAddress}/2200ms-delay"><!-- failed loading fragment #5 --></ableron-include>
+        <ableron-include src="${wiremockAddress}/404"><!-- failed loading fragment #6 --></ableron-include>
       </body>
       </html>
     """) == """
       <html>
       <head>
-        <!-- failed loading include #1 -->
+        <!-- failed loading fragment #1 -->
         <title>Foo</title>
-        response-2
+        fragment-2
       </head>
       <body>
-        response-3
-        response-4
-        response-5
-        <!-- failed loading include #6 -->
+        fragment-3
+        fragment-4
+        fragment-5
+        <!-- failed loading fragment #6 -->
       </body>
       </html>
     """
@@ -362,20 +362,20 @@ abstract class BaseSpec extends Specification {
     wiremockServer.stubFor(get("/redirect-test").willReturn(temporaryRedirect(wiremockAddress + "/redirect-test-2")))
     wiremockServer.stubFor(get("/redirect-test-2").willReturn(temporaryRedirect(wiremockAddress + "/redirect-test-3")))
     wiremockServer.stubFor(get("/redirect-test-3").willReturn(ok()
-      .withBody("response after redirect")))
+      .withBody("fragment after redirect")))
 
     when:
     def result = performUiIntegration(
       "<ableron-include src=\"${wiremockAddress}/redirect-test\"/>")
 
     then:
-    result == "response after redirect"
+    result == "fragment after redirect"
   }
 
   def "should favor include tag specific request timeout over global one"() {
     given:
     wiremockServer.stubFor(get("/5500ms-delay").willReturn(ok()
-      .withBody("response")
+      .withBody("fragment")
       .withHeader("Expires", "0")
       .withFixedDelay(5500)))
 
@@ -388,29 +388,29 @@ abstract class BaseSpec extends Specification {
     where:
     content                                                                                                    | expectedResolvedContent
     "<ableron-include src=\"${wiremockAddress}/5500ms-delay\"/>"                                               | ""
-    "<ableron-include src=\"${wiremockAddress}/5500ms-delay\" src-timeout-millis=\"6000\"/>"                   | "response"
+    "<ableron-include src=\"${wiremockAddress}/5500ms-delay\" src-timeout-millis=\"6000\"/>"                   | "fragment"
     "<ableron-include src=\"${wiremockAddress}/5500ms-delay\" fallback-src-timeout-millis=\"6000\"/>"          | ""
     "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\"/>"                                      | ""
     "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\" src-timeout-millis=\"6000\"/>"          | ""
-    "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\" fallback-src-timeout-millis=\"6000\"/>" | "response"
+    "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\" fallback-src-timeout-millis=\"6000\"/>" | "fragment"
   }
 
   @Unroll
-  def "should cache HTTP response if status code is defined as cacheable in RFC 7231 - Status #responsStatus"() {
+  def "should cache fragment if status code is defined as cacheable in RFC 7231 - Status #responsStatus"() {
     when:
     def includeSrcPath = randomIncludeSrcPath()
     wiremockServer.stubFor(get(includeSrcPath)
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(status(responsStatus)
-        .withBody(responseBody)
+        .withBody(fragmentContent)
         .withHeader("Cache-Control", "max-age=10"))
       .willSetStateTo("1st req completed"))
     wiremockServer.stubFor(get(includeSrcPath)
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
-        .withBody("response 2nd req")))
+        .withBody("fragment 2nd req")))
     def result1 = performUiIntegration(
       "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\">:(</ableron-include>")
     def result2 = performUiIntegration(
@@ -421,37 +421,37 @@ abstract class BaseSpec extends Specification {
     result2 == expectedResult2stInclude
 
     where:
-    responsStatus | responseBody | expectedResponseCached | expectedResult1stInclude | expectedResult2stInclude
-    100           | "response"   | false                  | ":("                     | "response 2nd req"
-    200           | "response"   | true                   | "response"               | "response"
-    202           | "response"   | false                  | ":("                     | "response 2nd req"
-    203           | "response"   | true                   | "response"               | "response"
-    204           | ""           | true                   | ""                       | ""
-    205           | "response"   | false                  | ":("                     | "response 2nd req"
-    206           | "response"   | true                   | "response"               | "response"
+    responsStatus | fragmentContent | expectedFragmentCached | expectedResult1stInclude | expectedResult2stInclude
+    100           | "fragment"      | false                  | ":("                     | "fragment 2nd req"
+    200           | "fragment"      | true                   | "fragment"               | "fragment"
+    202           | "fragment"      | false                  | ":("                     | "fragment 2nd req"
+    203           | "fragment"      | true                   | "fragment"               | "fragment"
+    204           | ""              | true                   | ""                       | ""
+    205           | "fragment"      | false                  | ":("                     | "fragment 2nd req"
+    206           | "fragment"      | true                   | "fragment"               | "fragment"
     // TODO: Testing status code 300 does not work on Java 11 because HttpClient fails with "IOException: Invalid redirection"
-    // 300           | "response"   | true                   | ":("                     | "fallback 2nd req"
-    302           | "response"   | false                  | ":("                     | "response 2nd req"
-    400           | "response"   | false                  | ":("                     | "response 2nd req"
-    404           | "response"   | true                   | ":("                     | ":( 2nd req"
-    405           | "response"   | true                   | ":("                     | ":( 2nd req"
-    410           | "response"   | true                   | ":("                     | ":( 2nd req"
-    414           | "response"   | true                   | ":("                     | ":( 2nd req"
-    500           | "response"   | false                  | ":("                     | "response 2nd req"
-    501           | "response"   | true                   | ":("                     | ":( 2nd req"
-    502           | "response"   | false                  | ":("                     | "response 2nd req"
-    503           | "response"   | false                  | ":("                     | "response 2nd req"
-    504           | "response"   | false                  | ":("                     | "response 2nd req"
-    505           | "response"   | false                  | ":("                     | "response 2nd req"
-    506           | "response"   | false                  | ":("                     | "response 2nd req"
-    507           | "response"   | false                  | ":("                     | "response 2nd req"
-    508           | "response"   | false                  | ":("                     | "response 2nd req"
-    509           | "response"   | false                  | ":("                     | "response 2nd req"
-    510           | "response"   | false                  | ":("                     | "response 2nd req"
-    511           | "response"   | false                  | ":("                     | "response 2nd req"
+    // 300           | "fragment"      | true                   | ":("                     | ":( 2nd req"
+    302           | "fragment"      | false                  | ":("                     | "fragment 2nd req"
+    400           | "fragment"      | false                  | ":("                     | "fragment 2nd req"
+    404           | "fragment"      | true                   | ":("                     | ":( 2nd req"
+    405           | "fragment"      | true                   | ":("                     | ":( 2nd req"
+    410           | "fragment"      | true                   | ":("                     | ":( 2nd req"
+    414           | "fragment"      | true                   | ":("                     | ":( 2nd req"
+    500           | "fragment"      | false                  | ":("                     | "fragment 2nd req"
+    501           | "fragment"      | true                   | ":("                     | ":( 2nd req"
+    502           | "fragment"      | false                  | ":("                     | "fragment 2nd req"
+    503           | "fragment"      | false                  | ":("                     | "fragment 2nd req"
+    504           | "fragment"      | false                  | ":("                     | "fragment 2nd req"
+    505           | "fragment"      | false                  | ":("                     | "fragment 2nd req"
+    506           | "fragment"      | false                  | ":("                     | "fragment 2nd req"
+    507           | "fragment"      | false                  | ":("                     | "fragment 2nd req"
+    508           | "fragment"      | false                  | ":("                     | "fragment 2nd req"
+    509           | "fragment"      | false                  | ":("                     | "fragment 2nd req"
+    510           | "fragment"      | false                  | ":("                     | "fragment 2nd req"
+    511           | "fragment"      | false                  | ":("                     | "fragment 2nd req"
   }
 
-  def "should cache response for s-maxage seconds if directive is present"() {
+  def "should cache fragment for s-maxage seconds if directive is present"() {
     given:
     def includeSrcPath = randomIncludeSrcPath()
     def content = "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"
@@ -459,7 +459,7 @@ abstract class BaseSpec extends Specification {
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
-        .withBody("response 1st req")
+        .withBody("fragment 1st req")
         .withHeader("Cache-Control", "max-age=2, s-maxage=6 , public")
         .withHeader("Expires", "Wed, 21 Oct 2015 07:28:00 GMT"))
       .willSetStateTo("1st req completed"))
@@ -467,7 +467,7 @@ abstract class BaseSpec extends Specification {
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
-        .withBody("response 2nd req"))
+        .withBody("fragment 2nd req"))
       .willSetStateTo("2nd req completed"))
 
     when:
@@ -478,12 +478,12 @@ abstract class BaseSpec extends Specification {
     def result3 = performUiIntegration(content)
 
     then:
-    result1 == "response 1st req"
-    result2 == "response 1st req"
-    result3 == "response 2nd req"
+    result1 == "fragment 1st req"
+    result2 == "fragment 1st req"
+    result3 == "fragment 2nd req"
   }
 
-  def "should cache response for max-age seconds if directive is present"() {
+  def "should cache fragment for max-age seconds if directive is present"() {
     given:
     def includeSrcPath = randomIncludeSrcPath()
     def content = "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"
@@ -491,7 +491,7 @@ abstract class BaseSpec extends Specification {
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
-        .withBody("response 1st req")
+        .withBody("fragment 1st req")
         .withHeader("Cache-Control", "max-age=3")
         .withHeader("Expires", "Wed, 21 Oct 2015 07:28:00 GMT"))
       .willSetStateTo("1st req completed"))
@@ -499,7 +499,7 @@ abstract class BaseSpec extends Specification {
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
-        .withBody("response 2nd req"))
+        .withBody("fragment 2nd req"))
       .willSetStateTo("2nd req completed"))
 
     when:
@@ -510,12 +510,12 @@ abstract class BaseSpec extends Specification {
     def result3 = performUiIntegration(content)
 
     then:
-    result1 == "response 1st req"
-    result2 == "response 1st req"
-    result3 == "response 2nd req"
+    result1 == "fragment 1st req"
+    result2 == "fragment 1st req"
+    result3 == "fragment 2nd req"
   }
 
-  def "should cache response for max-age seconds minus Age seconds if directive is present and Age header is set"() {
+  def "should cache fragment for max-age seconds minus Age seconds if directive is present and Age header is set"() {
     given:
     def includeSrcPath = randomIncludeSrcPath()
     def content = "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"
@@ -523,7 +523,7 @@ abstract class BaseSpec extends Specification {
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
-        .withBody("response 1st req")
+        .withBody("fragment 1st req")
         .withHeader("Cache-Control", "max-age=3600")
         .withHeader("Age", "3597")
         .withHeader("Expires", "Wed, 21 Oct 2015 07:28:00 GMT"))
@@ -532,7 +532,7 @@ abstract class BaseSpec extends Specification {
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
-        .withBody("response 2nd req"))
+        .withBody("fragment 2nd req"))
       .willSetStateTo("2nd req completed"))
 
     when:
@@ -543,12 +543,12 @@ abstract class BaseSpec extends Specification {
     def result3 = performUiIntegration(content)
 
     then:
-    result1 == "response 1st req"
-    result2 == "response 1st req"
-    result3 == "response 2nd req"
+    result1 == "fragment 1st req"
+    result2 == "fragment 1st req"
+    result3 == "fragment 2nd req"
   }
 
-  def "should cache response based on Expires header and current time if Cache-Control header and Date header are not present"() {
+  def "should cache fragment based on Expires header and current time if Cache-Control header and Date header are not present"() {
     given:
     def dateTimeFormatter = DateTimeFormatter.RFC_1123_DATE_TIME
       .withZone(ZoneId.of("GMT"))
@@ -558,7 +558,7 @@ abstract class BaseSpec extends Specification {
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
-        .withBody("response 1st req")
+        .withBody("fragment 1st req")
         .withHeader("Cache-Control", "public")
         .withHeader("Expires", dateTimeFormatter.format(Instant.now().plusSeconds(3))))
       .willSetStateTo("1st req completed"))
@@ -566,7 +566,7 @@ abstract class BaseSpec extends Specification {
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
-        .withBody("response 2nd req"))
+        .withBody("fragment 2nd req"))
       .willSetStateTo("2nd req completed"))
 
     when:
@@ -577,9 +577,9 @@ abstract class BaseSpec extends Specification {
     def result3 = performUiIntegration(content)
 
     then:
-    result1 == "response 1st req"
-    result2 == "response 1st req"
-    result3 == "response 2nd req"
+    result1 == "fragment 1st req"
+    result2 == "fragment 1st req"
+    result3 == "fragment 2nd req"
   }
 
   def "should handle Expires header with value 0"() {
@@ -590,22 +590,22 @@ abstract class BaseSpec extends Specification {
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
-        .withBody("response 1st req")
+        .withBody("fragment 1st req")
         .withHeader("Expires", "0"))
       .willSetStateTo("1st req completed"))
     wiremockServer.stubFor(get(includeSrcPath)
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
-        .withBody("response 2nd req")))
+        .withBody("fragment 2nd req")))
 
     when:
     def result1 = performUiIntegration(content)
     def result2 = performUiIntegration(content)
 
     then:
-    result1 == "response 1st req"
-    result2 == "response 2nd req"
+    result1 == "fragment 1st req"
+    result2 == "fragment 2nd req"
   }
 
   def "should treat http header names as case insensitive"() {
@@ -616,25 +616,25 @@ abstract class BaseSpec extends Specification {
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
-        .withBody("response 1st req")
+        .withBody("fragment 1st req")
         .withHeader("EXpIRes", "0"))
       .willSetStateTo("1st req completed"))
     wiremockServer.stubFor(get(includeSrcPath)
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
-        .withBody("response 2nd req")))
+        .withBody("fragment 2nd req")))
 
     when:
     def result1 = performUiIntegration(content)
     def result2 = performUiIntegration(content)
 
     then:
-    result1 == "response 1st req"
-    result2 == "response 2nd req"
+    result1 == "fragment 1st req"
+    result2 == "fragment 2nd req"
   }
 
-  def "should cache response based on Expires and Date header if Cache-Control header is not present"() {
+  def "should cache fragment based on Expires and Date header if Cache-Control header is not present"() {
     given:
     def includeSrcPath = randomIncludeSrcPath()
     def content = "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"
@@ -642,7 +642,7 @@ abstract class BaseSpec extends Specification {
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
-        .withBody("response 1st req")
+        .withBody("fragment 1st req")
         .withHeader("Date", "Wed, 12 Oct 2050 07:27:57 GMT")
         .withHeader("Expires", "Wed, 12 Oct 2050 07:28:00 GMT"))
       .willSetStateTo("1st req completed"))
@@ -650,7 +650,7 @@ abstract class BaseSpec extends Specification {
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
-        .withBody("response 2nd req")))
+        .withBody("fragment 2nd req")))
 
     when:
     def result1 = performUiIntegration(content)
@@ -660,12 +660,12 @@ abstract class BaseSpec extends Specification {
     def result3 = performUiIntegration(content)
 
     then:
-    result1 == "response 1st req"
-    result2 == "response 1st req"
-    result3 == "response 2nd req"
+    result1 == "fragment 1st req"
+    result2 == "fragment 1st req"
+    result3 == "fragment 2nd req"
   }
 
-  def "should not cache response if Cache-Control header is set but without max-age directives"() {
+  def "should not cache fragment if Cache-Control header is set but without max-age directives"() {
     given:
     def includeSrcPath = randomIncludeSrcPath()
     def content = "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"
@@ -673,36 +673,36 @@ abstract class BaseSpec extends Specification {
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
-        .withBody("response 1st req")
+        .withBody("fragment 1st req")
         .withHeader("Cache-Control", "no-cache,no-store,must-revalidate"))
       .willSetStateTo("1st req completed"))
     wiremockServer.stubFor(get(includeSrcPath)
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
-        .withBody("response 2nd req")))
+        .withBody("fragment 2nd req")))
 
     when:
     def result1 = performUiIntegration(content)
     def result2 = performUiIntegration(content)
 
     then:
-    result1 == "response 1st req"
-    result2 == "response 2nd req"
+    result1 == "fragment 1st req"
+    result2 == "fragment 2nd req"
   }
 
   def "should not crash when cache headers contain invalid values"() {
     when:
     def includeSrcPath = randomIncludeSrcPath()
     wiremockServer.stubFor(get(includeSrcPath).willReturn(ok()
-      .withBody("response")
+      .withBody("fragment")
       .withHeader(header1Name, header1Value)
       .withHeader(header2Name, header2Value)))
     def result = performUiIntegration(
       "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>")
 
     then:
-    result == "response"
+    result == "fragment"
 
     where:
     header1Name     | header1Value                    | header2Name | header2Value
@@ -713,7 +713,7 @@ abstract class BaseSpec extends Specification {
     "Expires"       | "Wed, 12 Oct 2050 07:28:00 GMT" | "Date"      | "not-a-date"
   }
 
-  def "should cache response if no expiration time is indicated via response header"() {
+  def "should cache fragment if no expiration time is indicated via response header"() {
     given:
     def includeSrcPath = randomIncludeSrcPath()
     def content = "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"
@@ -721,13 +721,13 @@ abstract class BaseSpec extends Specification {
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
-        .withBody("response 1st req"))
+        .withBody("fragment 1st req"))
       .willSetStateTo("1st req completed"))
     wiremockServer.stubFor(get(includeSrcPath)
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("1st req completed")
       .willReturn(ok()
-        .withBody("response 2nd req")))
+        .withBody("fragment 2nd req")))
 
     when:
     def result1 = performUiIntegration(content)
@@ -735,8 +735,8 @@ abstract class BaseSpec extends Specification {
     def result2 = performUiIntegration(content)
 
     then:
-    result1 == "response 1st req"
-    result2 == "response 1st req"
+    result1 == "fragment 1st req"
+    result2 == "fragment 1st req"
   }
 
   private String performUiIntegration(String content) {
