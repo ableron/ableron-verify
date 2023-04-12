@@ -1,6 +1,6 @@
 plugins {
   id 'java'
-  id 'org.springframework.boot' version '2.7.9'
+  id 'org.springframework.boot' version '2.7.10'
 }
 
 group = 'io.github.ableron'
@@ -13,8 +13,8 @@ repositories {
 }
 
 dependencies {
-  implementation('io.github.ableron:ableron:1.0.1') {
+  implementation('io.github.ableron:ableron:1.1.0') {
     exclude group: 'org.slf4j', module: 'slf4j-api'
   }
-  implementation 'org.springframework.boot:spring-boot-starter-web:2.7.9'
+  implementation 'org.springframework.boot:spring-boot-starter-web:2.7.10'
 }

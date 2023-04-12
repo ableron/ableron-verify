@@ -739,13 +739,113 @@ abstract class BaseSpec extends Specification {
     result2 == "fragment 1st req"
   }
 
+  def "should pass allowed request headers to fragment requests"() {
+    given:
+    wiremockServer.stubFor(get("/pass-req-headers-01").willReturn(ok()))
+
+    when:
+    performUiIntegration(
+      "<ableron-include src=\"${wiremockAddress}/pass-req-headers-01\"/>",
+      ["X-Correlation-ID": ["pass-req-headers-test"]]
+    )
+
+    then:
+    wiremockServer.verify(1, getRequestedFor(urlEqualTo("/pass-req-headers-01"))
+      .withHeader("X-Correlation-ID", equalTo("pass-req-headers-test")))
+  }
+
+  def "should pass allowed request headers to fragment requests treating header names as case insensitive"() {
+    given:
+    wiremockServer.stubFor(get("/pass-req-headers-02").willReturn(ok()))
+
+    when:
+    performUiIntegration(
+      "<ableron-include src=\"${wiremockAddress}/pass-req-headers-02\"/>",
+      ["x-correlation-ID": ["pass-req-headers-test-case-insensitivity"]]
+    )
+
+    then:
+    wiremockServer.verify(1, getRequestedFor(urlEqualTo("/pass-req-headers-02"))
+      .withHeader("x-correlation-ID", equalTo("pass-req-headers-test-case-insensitivity")))
+  }
+
+  def "should not pass non-allowed request headers to fragment requests"() {
+    given:
+    wiremockServer.stubFor(get("/pass-req-headers-03").willReturn(ok()))
+
+    when:
+    performUiIntegration(
+      "<ableron-include src=\"${wiremockAddress}/pass-req-headers-03\"/>",
+      ["X-Test": ["not allowed to pass this header to fragment requests by default"]]
+    )
+
+    then:
+    wiremockServer.verify(1, getRequestedFor(urlEqualTo("/pass-req-headers-03"))
+      .withoutHeader("X-Test"))
+  }
+
+  def "should pass default User-Agent header to fragment requests"() {
+    given:
+    wiremockServer.stubFor(get("/pass-req-headers-04").willReturn(ok()))
+
+    when:
+    performUiIntegration("<ableron-include src=\"${wiremockAddress}/pass-req-headers-04\"/>")
+
+    then:
+    wiremockServer.verify(1, getRequestedFor(urlEqualTo("/pass-req-headers-04"))
+      .withHeader("User-Agent", matching("^Java-http-client/.+")))
+  }
+
+  def "should pass provided User-Agent header to fragment requests by default"() {
+    given:
+    wiremockServer.stubFor(get("/pass-req-headers-05").willReturn(ok()))
+
+    when:
+    performUiIntegration(
+      "<ableron-include src=\"${wiremockAddress}/pass-req-headers-05\"/>",
+      ["User-Agent": ["pass-through-user-agent"]]
+    )
+
+    then:
+    wiremockServer.verify(1, getRequestedFor(urlEqualTo("/pass-req-headers-05"))
+      .withHeader("User-Agent", equalTo("pass-through-user-agent")))
+  }
+
+  def "should pass header with multiple values to fragment requests"() {
+    given:
+    wiremockServer.stubFor(get("/pass-req-headers-06").willReturn(ok()))
+
+    when:
+    performUiIntegration(
+      "<ableron-include src=\"${wiremockAddress}/pass-req-headers-06\"/>",
+      ["x-request-id": ["Foo", "Bar", "Baz"]]
+    )
+
+    then:
+    wiremockServer.verify(1, getRequestedFor(urlEqualTo("/pass-req-headers-06"))
+      .withHeader("x-request-id", equalTo("Foo"))
+      .withHeader("x-request-id", equalTo("Bar"))
+      .withHeader("x-request-id", equalTo("Baz")))
+  }
+
   private String performUiIntegration(String content) {
     return performUiIntegrationRaw(content).body()
   }
 
+  private String performUiIntegration(String content, Map<String, List<String>> requestHeaders) {
+    return performUiIntegrationRaw(content, requestHeaders).body()
+  }
+
   private HttpResponse<String> performUiIntegrationRaw(String content) {
-    def response = httpClient.send(HttpRequest.newBuilder()
+    return performUiIntegrationRaw(content, [:])
+  }
+
+  private HttpResponse<String> performUiIntegrationRaw(String content, Map<String, List<String>> requestHeaders) {
+    def requestBuilder = HttpRequest.newBuilder()
       .uri(verifyUrl)
+    requestHeaders.each { name, values -> values.each {value -> requestBuilder.header(name, value) } }
+
+    def response = httpClient.send(requestBuilder
       .POST(HttpRequest.BodyPublishers.ofString(content))
       .build(), HttpResponse.BodyHandlers.ofString())
     assert response.statusCode() == 200
