@@ -357,19 +357,31 @@ abstract class BaseSpec extends Specification {
     """
   }
 
-  def "should follow redirects when resolving URLs"() {
+  def "should not follow redirects when resolving URLs"() {
     given:
     wiremockServer.stubFor(get("/redirect-test").willReturn(temporaryRedirect(wiremockAddress + "/redirect-test-2")))
-    wiremockServer.stubFor(get("/redirect-test-2").willReturn(temporaryRedirect(wiremockAddress + "/redirect-test-3")))
-    wiremockServer.stubFor(get("/redirect-test-3").willReturn(ok()
+    wiremockServer.stubFor(get("/redirect-test-2").willReturn(ok()
       .withBody("fragment after redirect")))
 
     when:
     def result = performUiIntegration(
-      "<ableron-include src=\"${wiremockAddress}/redirect-test\"/>")
+      "<ableron-include src=\"${wiremockAddress}/redirect-test\"><!-- failed --></ableron-include>")
 
     then:
-    result == "fragment after redirect"
+    result == "<!-- failed -->"
+  }
+
+  def "should return redirect for primary includes"() {
+    given:
+    wiremockServer.stubFor(get("/redirect-test-3").willReturn(temporaryRedirect(wiremockAddress + "/redirect-test-4")))
+
+    when:
+    def result = performUiIntegrationRaw(
+      "<ableron-include src=\"${wiremockAddress}/redirect-test-3\" primary><!-- failed --></ableron-include>")
+
+    then:
+    result.statusCode() == 302
+    result.body() == ""
   }
 
   def "should favor include tag specific request timeout over global one"() {
@@ -828,12 +840,119 @@ abstract class BaseSpec extends Specification {
       .withHeader("x-request-id", equalTo("Baz")))
   }
 
+  def "should send success status code of primary include"() {
+    given:
+    wiremockServer.stubFor(get("/primary-test-1").willReturn(status(206)
+      .withBody("primary-test-1")))
+
+    when:
+    def result = performUiIntegrationRaw("""
+      <ableron-include src="${wiremockAddress}/primary-test-1" primary><!-- failed --></ableron-include>
+    """)
+
+    then:
+    result.statusCode() == 206
+    result.body() == """
+      primary-test-1
+    """
+  }
+
+  def "should send success status code of fallback-src of primary include"() {
+    given:
+    wiremockServer.stubFor(get("/primary-test-2-src").willReturn(status(500)
+      .withBody("primary-test-2-src")))
+    wiremockServer.stubFor(get("/primary-test-2-fallback-src").willReturn(status(206)
+      .withBody("primary-test-2-fallback-src")))
+
+    when:
+    def result = performUiIntegrationRaw("""
+      <ableron-include
+        src="${wiremockAddress}/primary-test-2-src"
+        fallback-src="${wiremockAddress}/primary-test-2-fallback-src"
+        primary><!-- failed --></ableron-include>
+    """)
+
+    then:
+    result.statusCode() == 206
+    result.body() == """
+      primary-test-2-fallback-src
+    """
+  }
+
+  def "should send error status of errored src in case also fallback-src errored"() {
+    given:
+    wiremockServer.stubFor(get("/primary-test-3-src").willReturn(status(503)
+      .withBody("primary-test-3-src")))
+    wiremockServer.stubFor(get("/primary-test-3-fallback-src").willReturn(status(500)
+      .withBody("primary-test-3-fallback-src")))
+
+    when:
+    def result = performUiIntegrationRaw("""
+      <ableron-include
+        src="${wiremockAddress}/primary-test-3-src"
+        fallback-src="${wiremockAddress}/primary-test-3-fallback-src"
+        primary><!-- failed --></ableron-include>
+    """)
+
+    then:
+    result.statusCode() == 503
+    result.body() == """
+      primary-test-3-src
+    """
+  }
+
+  def "should send 4xx status code along fallback content for primary include"() {
+    given:
+    wiremockServer.stubFor(get("/primary-test-4-header").willReturn(ok()
+      .withBody("header")))
+    wiremockServer.stubFor(get("/primary-test-4-main").willReturn(notFound()
+      .withBody("404 content")))
+    wiremockServer.stubFor(get("/primary-test-4-footer").willReturn(ok()
+      .withBody("footer")))
+
+    when:
+    def result = performUiIntegrationRaw("""
+      <ableron-include src="${wiremockAddress}/primary-test-4-header"/>
+      <ableron-include src="${wiremockAddress}/primary-test-4-main" primary><!-- 404 not found --></ableron-include>
+      <ableron-include src="${wiremockAddress}/primary-test-4-footer"/>
+    """)
+
+    then:
+    result.statusCode() == 404
+    result.body() == """
+      header
+      404 content
+      footer
+    """
+  }
+
+  def "should ignore fallback content and set fragment status code and body of errored src if primary"() {
+    given:
+    wiremockServer.stubFor(get("/primary-test-5").willReturn(status(500)
+      .withBody("primary-test-5")))
+
+    when:
+    def result = performUiIntegrationRaw("""
+      <ableron-include src="${wiremockAddress}/primary-test-5" primary><!-- failed --></ableron-include>
+    """)
+
+    then:
+    result.statusCode() == 500
+    result.body() == """
+      primary-test-5
+    """
+  }
+
   private String performUiIntegration(String content) {
-    return performUiIntegrationRaw(content).body()
+    def response = performUiIntegrationRaw(content)
+    assert response.statusCode() == 200
+    return response.body()
   }
 
   private String performUiIntegration(String content, Map<String, List<String>> requestHeaders) {
-    return performUiIntegrationRaw(content, requestHeaders).body()
+    def response = performUiIntegrationRaw(content, requestHeaders)
+    assert response.statusCode() == 200
+    return response.body()
   }
 
   private HttpResponse<String> performUiIntegrationRaw(String content) {
@@ -848,7 +967,6 @@ abstract class BaseSpec extends Specification {
     def response = httpClient.send(requestBuilder
       .POST(HttpRequest.BodyPublishers.ofString(content))
       .build(), HttpResponse.BodyHandlers.ofString())
-    assert response.statusCode() == 200
     return response
   }
 

@@ -1,4 +1,4 @@
-name: ableron-spring-boot with Spring Boot 2 and Java 11
+name: ableron-java with Java 20
 
 on: push
 
@@ -12,4 +12,4 @@ jobs:
           java-version: 20
           distribution: temurin
           cache: gradle
-      - run: ./gradlew test --tests '*.SpringBoot2Java11Spec'
+      - run: ./gradlew test --tests '*.Java20Spec'

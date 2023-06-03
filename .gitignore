@@ -2,7 +2,7 @@
 .DS_Store
 
 # IDE
-/.idea/
+.idea
 /.settings/
 /.vscode/
 *.iml
@@ -11,4 +11,7 @@
 
 # Build
 .gradle/
+**/gradle/
+**/gradlew
+**/gradlew.bat
 build/

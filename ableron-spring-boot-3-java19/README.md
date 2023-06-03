@@ -1,4 +1,0 @@
-# Test App for `ableron-spring-boot` with Spring Boot 3 and Java 19
-
-* `gradle bootRun` to test whether application starts
-* `docker compose build && docker compose up` to test whether dockerized application starts
