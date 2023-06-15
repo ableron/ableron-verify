@@ -373,7 +373,7 @@ abstract class BaseSpec extends Specification {
 
   def "should return redirect for primary includes"() {
     given:
-    wiremockServer.stubFor(get("/redirect-test-3").willReturn(temporaryRedirect(wiremockAddress + "/redirect-test-4")))
+    wiremockServer.stubFor(get("/redirect-test-3").willReturn(temporaryRedirect("/redirect-test-3")))
 
     when:
     def result = performUiIntegrationRaw(
@@ -381,6 +381,29 @@ abstract class BaseSpec extends Specification {
 
     then:
     result.statusCode() == 302
+    result.headers().firstValue("Location").get() == "/redirect-test-3"
+    result.body() == ""
+  }
+
+  def "should add default primary include response headers to final response"() {
+    given:
+    wiremockServer.stubFor(get("/primary-include-default-response-headers-to-pass").willReturn(ok()
+      .withBody("fragment")
+      .withHeader("Location", "/location")
+      .withHeader("Refresh", "5")
+      .withHeader("Content-Language", "en")
+      .withHeader("X-Correlation-ID", "a-b-c-d")))
+
+    when:
+    def result = performUiIntegrationRaw(
+      "<ableron-include src=\"${wiremockAddress}/primary-include-default-response-headers-to-pass\" primary><!-- failed --></ableron-include>")
+
+    then:
+    result.statusCode() == 200
+    result.headers().firstValue("Location").get() == "/location"
+    result.headers().firstValue("Refresh").get() == "5"
+    result.headers().firstValue("Content-Language").get() == "en"
+    result.headers().firstValue("X-Correlation-ID").isEmpty()
     result.body() == ""
   }
 

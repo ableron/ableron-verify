@@ -2,9 +2,11 @@ package io.github.ableron.ableronverify;
 
 import io.github.ableron.Ableron;
 import io.github.ableron.AbleronConfig;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,7 +28,8 @@ public class VerifyController {
 
     return new ResponseEntity<>(
       transclusionResult.getContent(),
-      transclusionResult.getStatusCodeOverride()
+      new HttpHeaders(CollectionUtils.toMultiValueMap(transclusionResult.getPrimaryIncludeResponseHeaders())),
+      transclusionResult.getPrimaryIncludeStatusCode()
         .map(HttpStatus::valueOf)
         .orElse(HttpStatus.OK)
     );
