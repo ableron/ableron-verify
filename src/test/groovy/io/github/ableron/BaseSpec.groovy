@@ -404,7 +404,7 @@ abstract class BaseSpec extends Specification {
     result.headers().firstValue("Refresh").get() == "5"
     result.headers().firstValue("Content-Language").get() == "en"
     result.headers().firstValue("X-Correlation-ID").isEmpty()
-    result.body() == ""
+    result.body() == "fragment"
   }
 
   def "should favor include tag specific request timeout over global one"() {
