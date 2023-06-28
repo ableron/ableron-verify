@@ -2,6 +2,8 @@ package io.github.ableron
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer
+import com.github.tomakehurst.wiremock.http.HttpHeader
+import com.github.tomakehurst.wiremock.http.HttpHeaders
 import org.testcontainers.Testcontainers
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
@@ -748,7 +750,7 @@ abstract class BaseSpec extends Specification {
     "Expires"       | "Wed, 12 Oct 2050 07:28:00 GMT" | "Date"      | "not-a-date"
   }
 
-  def "should cache fragment if no expiration time is indicated via response header"() {
+  def "should not cache fragment if no expiration time is indicated via response header"() {
     given:
     def includeSrcPath = randomIncludeSrcPath()
     def content = "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"
@@ -756,6 +758,33 @@ abstract class BaseSpec extends Specification {
       .inScenario(includeSrcPath)
       .whenScenarioStateIs("Started")
       .willReturn(ok()
+        .withBody("fragment 1st req"))
+      .willSetStateTo("1st req completed"))
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
+      .whenScenarioStateIs("1st req completed")
+      .willReturn(ok()
+        .withBody("fragment 2nd req")))
+
+    when:
+    def result1 = performUiIntegration(content)
+    sleep(2000)
+    def result2 = performUiIntegration(content)
+
+    then:
+    result1 == "fragment 1st req"
+    result2 == "fragment 2nd req"
+  }
+
+  def "should cache fragment if valid expiration time is indicated via response header"() {
+    given:
+    def includeSrcPath = randomIncludeSrcPath()
+    def content = "<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>"
+    wiremockServer.stubFor(get(includeSrcPath)
+      .inScenario(includeSrcPath)
+      .whenScenarioStateIs("Started")
+      .willReturn(ok()
+        .withHeader("Cache-Control", "max-age=60")
         .withBody("fragment 1st req"))
       .willSetStateTo("1st req completed"))
     wiremockServer.stubFor(get(includeSrcPath)
@@ -964,6 +993,39 @@ abstract class BaseSpec extends Specification {
     result.body() == """
       primary-test-5
     """
+  }
+
+  def "should override page expiration time based on resolved fragments"() {
+    given:
+    def includeSrcPath = randomIncludeSrcPath()
+    wiremockServer.stubFor(get(includeSrcPath).willReturn(status(200)
+      .withHeaders(new HttpHeaders(headers))
+      .withBody("fragment")))
+
+    when:
+    def result = performUiIntegrationRaw("""
+      <ableron-include src="${wiremockAddress}${includeSrcPath}" />
+    """)
+
+    then:
+    result.statusCode() == 200
+    result.headers().firstValue("Cache-Control").get() == expectedResultingCacheControl
+    result.body() == """
+      fragment
+    """
+
+    where:
+    headers                                                                                            | expectedResultingCacheControl
+    []                                                                                                 | "no-store"
+    [new HttpHeader("Cache-Control", "max-age=0")]                                                     | "no-store"
+    [new HttpHeader("Cache-Control", "no-cache,no-store,must-revalidate")]                             | "no-store"
+    [new HttpHeader("Cache-Control", "s-maxage=not-numeric")]                                          | "no-store"
+    [new HttpHeader("Cache-Control", "max-age=not-numeric")]                                           | "no-store"
+    [new HttpHeader("Cache-Control", "max-age=3600"), new HttpHeader("Age", "not-numeric")]            | "no-store"
+    [new HttpHeader("Expires", "not-a-date")]                                                          | "no-store"
+    [new HttpHeader("Expires", "Wed, 12 Oct 2050 07:28:00 GMT"), new HttpHeader("Date", "not-a-date")] | "no-store"
+    [new HttpHeader("Cache-Control", "max-age=300")]                                                   | "max-age=299"
+    [new HttpHeader("Cache-Control", "max-age=1200")]                                                  | "max-age=600"
   }
 
   private String performUiIntegration(String content) {
