@@ -996,13 +996,11 @@ abstract class BaseSpec extends Specification {
   }
 
   def "should override page expiration time based on resolved fragments"() {
-    given:
+    when:
     def includeSrcPath = randomIncludeSrcPath()
     wiremockServer.stubFor(get(includeSrcPath).willReturn(status(200)
       .withHeaders(new HttpHeaders(headers))
       .withBody("fragment")))
-
-    when:
     def result = performUiIntegrationRaw("""
       <ableron-include src="${wiremockAddress}${includeSrcPath}" />
     """)
@@ -1024,7 +1022,7 @@ abstract class BaseSpec extends Specification {
     [new HttpHeader("Cache-Control", "max-age=3600"), new HttpHeader("Age", "not-numeric")]            | "no-store"
     [new HttpHeader("Expires", "not-a-date")]                                                          | "no-store"
     [new HttpHeader("Expires", "Wed, 12 Oct 2050 07:28:00 GMT"), new HttpHeader("Date", "not-a-date")] | "no-store"
-    [new HttpHeader("Cache-Control", "max-age=300")]                                                   | "max-age=299"
+    [new HttpHeader("Cache-Control", "max-age=300")]                                                   | "max-age=300"
     [new HttpHeader("Cache-Control", "max-age=1200")]                                                  | "max-age=600"
   }
 

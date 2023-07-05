@@ -13,8 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.Duration;
 
 @RestController
 public class VerifyController {
@@ -28,21 +27,13 @@ public class VerifyController {
   @PostMapping(value = "/verify", produces = MediaType.TEXT_HTML_VALUE)
   public ResponseEntity<String> verify(@RequestBody String content, @RequestHeader MultiValueMap<String, String> requestHeaders) {
     var transclusionResult = ableron.resolveIncludes(content, requestHeaders);
-    var responseHeaders = new HttpHeaders(CollectionUtils.toMultiValueMap(transclusionResult.getPrimaryIncludeResponseHeaders()));
-    transclusionResult.getContentExpirationTime().ifPresent(contentExpirationTime -> {
-      if (contentExpirationTime.isBefore(Instant.now())) {
-        responseHeaders.set(HttpHeaders.CACHE_CONTROL, "no-store");
-      } else if (contentExpirationTime.isBefore(Instant.now().plusSeconds(600))) {
-        responseHeaders.set(HttpHeaders.CACHE_CONTROL, "max-age=" + ChronoUnit.SECONDS.between(Instant.now(), contentExpirationTime));
-      } else {
-        responseHeaders.set(HttpHeaders.CACHE_CONTROL, "max-age=600");
-      }
-    });
+    var responseHeaders = new HttpHeaders(CollectionUtils.toMultiValueMap(transclusionResult.getResponseHeadersToPass()));
+    responseHeaders.set(HttpHeaders.CACHE_CONTROL, transclusionResult.calculateCacheControlHeaderValue(Duration.ofSeconds(600)));
 
     return new ResponseEntity<>(
       transclusionResult.getContent(),
       responseHeaders,
-      transclusionResult.getPrimaryIncludeStatusCode()
+      transclusionResult.getStatusCodeOverride()
         .map(HttpStatus::valueOf)
         .orElse(HttpStatus.OK)
     );
