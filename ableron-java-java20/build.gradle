@@ -7,12 +7,13 @@ group = 'io.github.ableron'
 
 repositories {
   mavenCentral()
+  mavenLocal()
   maven {
     url 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
   }
 }
 
 dependencies {
-  implementation 'io.github.ableron:ableron:1.4.0'
+  implementation 'io.github.ableron:ableron:1.5.0'
   implementation 'org.springframework.boot:spring-boot-starter-web:3.1.3'
 }
