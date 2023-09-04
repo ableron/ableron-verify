@@ -1041,7 +1041,9 @@ abstract class BaseSpec extends Specification {
     expect:
     performUiIntegration("""
       <ableron-include src="${wiremockAddress}${includeSrcPath}" />
-    """) == "response body transferred gzipped"
+    """) == """
+      response body transferred gzipped
+    """
   }
 
   private String performUiIntegration(String content) {
