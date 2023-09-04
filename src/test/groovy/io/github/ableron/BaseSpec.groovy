@@ -18,6 +18,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
+import java.util.zip.GZIPOutputStream
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
@@ -37,7 +38,9 @@ abstract class BaseSpec extends Specification {
   URI verifyUrl
 
   @Shared
-  def httpClient = HttpClient.newBuilder().build()
+  def httpClient = HttpClient.newBuilder()
+    .version(HttpClient.Version.HTTP_2)
+    .build()
 
   abstract GenericContainer getContainerUnderTest()
 
@@ -1026,6 +1029,21 @@ abstract class BaseSpec extends Specification {
     [new HttpHeader("Cache-Control", "max-age=1200")]                                                  | "max-age=600"
   }
 
+  def "should utilize gzip encoding"() {
+    given:
+    def includeSrcPath = randomIncludeSrcPath()
+    wiremockServer.stubFor(get(includeSrcPath)
+      .withHeader("Accept-Encoding", containing("gzip"))
+      .willReturn(ok()
+        .withHeader("Content-Encoding", "gzip")
+        .withBody(gzip("response body transferred gzipped"))))
+
+    expect:
+    performUiIntegration("""
+      <ableron-include src="${wiremockAddress}${includeSrcPath}" />
+    """) == "response body transferred gzipped"
+  }
+
   private String performUiIntegration(String content) {
     def response = performUiIntegrationRaw(content)
     assert response.statusCode() == 200
@@ -1055,5 +1073,15 @@ abstract class BaseSpec extends Specification {
 
   private String randomIncludeSrcPath() {
     return "/" + UUID.randomUUID().toString()
+  }
+
+  private byte[] gzip(String data) {
+    def bos = new ByteArrayOutputStream(data.length())
+    def gzipOutputStream = new GZIPOutputStream(bos)
+    gzipOutputStream.write(data.getBytes())
+    gzipOutputStream.close()
+    byte[] gzipped = bos.toByteArray()
+    bos.close()
+    return gzipped
   }
 }
