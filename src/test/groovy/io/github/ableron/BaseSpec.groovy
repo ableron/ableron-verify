@@ -1046,6 +1046,32 @@ abstract class BaseSpec extends Specification {
     """
   }
 
+  def "should handle broken gzip encoding"() {
+    given:
+    def includeSrcPath = randomIncludeSrcPath()
+    wiremockServer.stubFor(get(includeSrcPath)
+      .withHeader("Accept-Encoding", containing("gzip"))
+      .willReturn(ok()
+        .withHeader("Content-Encoding", "gzip")
+        .withBody(Arrays.copyOfRange(gzip("response body transferred gzipped"), 4, 10))))
+
+    expect:
+    performUiIntegration("<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>") == ""
+  }
+
+  def "should handle unknown content encoding"() {
+    given:
+    def includeSrcPath = randomIncludeSrcPath()
+    wiremockServer.stubFor(get(includeSrcPath)
+      .withHeader("Accept-Encoding", containing("gzip"))
+      .willReturn(ok()
+        .withHeader("Content-Encoding", "br")
+        .withBody("plain text body but with wrong content-encoding")))
+
+    expect:
+    performUiIntegration("<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>") == ""
+  }
+
   private String performUiIntegration(String content) {
     def response = performUiIntegrationRaw(content)
     assert response.statusCode() == 200
