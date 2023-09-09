@@ -8,6 +8,7 @@ Test suite to verify all implementations of ableron provide a common feature set
 * [![ableron-spring-boot with Spring Boot 2 and Java 20 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java20.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java20.yml)
 * [![ableron-spring-boot with Spring Boot 3 and Java 17 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java17.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java17.yml)
 * [![ableron-spring-boot with Spring Boot 3 and Java 20 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java20.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java20.yml)
+* [![ableron-js with Node.js 20 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-js-nodejs20.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-js-nodejs20.yml)
 
 ## Quick Start
 * Run tests
