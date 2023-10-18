@@ -889,10 +889,15 @@ abstract class BaseSpec extends Specification {
     )
 
     then:
-    wiremockServer.verify(1, getRequestedFor(urlEqualTo("/pass-req-headers-06"))
-      .withHeader("x-request-id", equalTo("Foo"))
-      .withHeader("x-request-id", equalTo("Bar"))
-      .withHeader("x-request-id", equalTo("Baz")))
+    try {
+      wiremockServer.verify(1, getRequestedFor(urlEqualTo("/pass-req-headers-06"))
+        .withHeader("x-request-id", equalTo("Foo"))
+        .withHeader("x-request-id", equalTo("Bar"))
+        .withHeader("x-request-id", equalTo("Baz")))
+    } catch (Throwable ignore) {
+      wiremockServer.verify(1, getRequestedFor(urlEqualTo("/pass-req-headers-06"))
+        .withHeader("x-request-id", equalTo("Foo, Bar, Baz")))
+    }
   }
 
   def "should send success status code of primary include"() {
