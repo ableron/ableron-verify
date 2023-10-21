@@ -13,7 +13,7 @@ app.post('/verify', async (req, res) => {
   transclusionResult.getResponseHeadersToPass().forEach((headerValue, headerName) => res.setHeader(headerName, headerValue))
   res
     .setHeader('Content-Type', 'text/html; charset=utf-8')
-    .setHeader('Cache-Control', transclusionResult.calculateCacheControlHeaderValueByResponseHeaders(res.getHeaders()))
+    .setHeader('Cache-Control', transclusionResult.calculateCacheControlHeaderValue(600))
     .status(transclusionResult.getStatusCodeOverride() || 200)
     .send(transclusionResult.getContent())
 })

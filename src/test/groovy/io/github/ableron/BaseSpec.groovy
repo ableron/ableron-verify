@@ -230,7 +230,7 @@ abstract class BaseSpec extends Specification {
     "invalid fallback-src timeout" | '<ableron-include fallback-src-timeout-millis="5s">fallback</ableron-include>' | "fallback"
   }
 
-  def "should cache fragments"() {
+  def "should collapse fragment requests and cache fragments"() {
     given:
     wiremockServer.stubFor(get("/k5I9M").willReturn(ok()
       .withBody("fragment")
@@ -269,7 +269,7 @@ abstract class BaseSpec extends Specification {
     wiremockServer.verify(1, getRequestedFor(urlEqualTo("/k5I9M_404")))
   }
 
-  def "should not cache fragments if prohibited by Expires header"() {
+  def "should not collapse fragment requests and cache fragments if prohibited by Expires header"() {
     given:
     wiremockServer.stubFor(get("/heM8d").willReturn(ok()
       .withBody("fragment")
