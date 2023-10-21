@@ -3,11 +3,11 @@ Test suite to verify all implementations of ableron provide a common feature set
 
 * [![ableron-java with Java 11 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java11.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java11.yml)
 * [![ableron-java with Java 17 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java17.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java17.yml)
-* [![ableron-java with Java 20 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java20.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java20.yml)
+* [![ableron-java with Java 21 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java21.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java21.yml)
 * [![ableron-spring-boot with Spring Boot 2 and Java 11 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java11.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java11.yml)
-* [![ableron-spring-boot with Spring Boot 2 and Java 20 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java20.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java20.yml)
+* [![ableron-spring-boot with Spring Boot 2 and Java 21 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java21.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java21.yml)
 * [![ableron-spring-boot with Spring Boot 3 and Java 17 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java17.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java17.yml)
-* [![ableron-spring-boot with Spring Boot 3 and Java 20 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java20.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java20.yml)
+* [![ableron-spring-boot with Spring Boot 3 and Java 21 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java21.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java21.yml)
 * [![ableron-js with Node.js 20 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-js-nodejs20.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-js-nodejs20.yml)
 
 ## Quick Start

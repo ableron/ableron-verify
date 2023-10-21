@@ -1,4 +1,4 @@
-FROM gradle:8-jdk20
+FROM gradle:8-jdk21
 COPY . /opt/app
 WORKDIR /opt/app
 

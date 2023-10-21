@@ -1,4 +1,4 @@
-name: ableron-spring-boot with Spring Boot 3 and Java 20
+name: ableron-spring-boot with Spring Boot 2 and Java 21
 
 on: push
 
@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v3
         with:
-          java-version: 20
+          java-version: 21
           distribution: temurin
           cache: gradle
-      - run: ./gradlew test --tests '*.SpringBoot3Java20Spec'
+      - run: ./gradlew test --tests '*.SpringBoot2Java21Spec'
