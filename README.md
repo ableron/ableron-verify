@@ -8,7 +8,7 @@ Test suite to verify all implementations of ableron provide a common feature set
 * [![ableron-spring-boot with Spring Boot 2 and Java 21 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java21.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java21.yml)
 * [![ableron-spring-boot with Spring Boot 3 and Java 17 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java17.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java17.yml)
 * [![ableron-spring-boot with Spring Boot 3 and Java 21 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java21.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java21.yml)
-* [![ableron-js with Node.js 20 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-js-nodejs20.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-js-nodejs20.yml)
+* [![ableron-js with Node.js 21 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-js-nodejs21.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-js-nodejs21.yml)
 
 ## Quick Start
 * Run tests
