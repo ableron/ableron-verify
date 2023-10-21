@@ -1,9 +1,9 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const app = express()
-const port = 8080
 const { Ableron, AbleronConfig } = require('ableron');
 
+const app = express()
+const port = 8080
 const ableron = new Ableron(new AbleronConfig())
 
 app.use(bodyParser.text({ type: 'text/*', limit: '5MB' }))
