@@ -1,4 +1,4 @@
-name: ableron-java with Java 11
+name: ableron-java @ Java 11
 
 on: push
 

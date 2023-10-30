@@ -1,15 +1,15 @@
 # Ableron Verification Test Suite
 Test suite to verify all implementations of ableron provide a common feature set.
 
-* [![ableron-java with Java 11 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java11.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java11.yml)
-* [![ableron-java with Java 17 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java17.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java17.yml)
-* [![ableron-java with Java 21 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java21.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java21.yml)
-* [![ableron-spring-boot with Spring Boot 2 and Java 11 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java11.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java11.yml)
-* [![ableron-spring-boot with Spring Boot 2 and Java 21 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java21.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java21.yml)
-* [![ableron-spring-boot with Spring Boot 3 and Java 17 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java17.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java17.yml)
-* [![ableron-spring-boot with Spring Boot 3 and Java 21 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java21.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java21.yml)
-* [![ableron-js with Node.js 21 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-js-nodejs21.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-js-nodejs21.yml)
-* [![ableron-express with Node.js 21 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-express-nodejs21.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-express-nodejs21.yml)
+* [![ableron-java @ Java 11 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java11.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java11.yml)
+* [![ableron-java @ Java 17 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java17.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java17.yml)
+* [![ableron-java @ Java 21 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java21.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-java-java21.yml)
+* [![ableron-spring-boot @ Spring Boot 2 and Java 11 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java11.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java11.yml)
+* [![ableron-spring-boot @ Spring Boot 2 and Java 21 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java21.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-2-java21.yml)
+* [![ableron-spring-boot @ Spring Boot 3 and Java 17 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java17.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java17.yml)
+* [![ableron-spring-boot @ Spring Boot 3 and Java 21 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java21.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-spring-boot-3-java21.yml)
+* [![ableron-js @ Node.js 21 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-js-nodejs21.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-js-nodejs21.yml)
+* [![ableron-express @ Node.js 21 Status](https://github.com/ableron/ableron-verify/actions/workflows/ableron-express-nodejs21.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/ableron-express-nodejs21.yml)
 
 ## Quick Start
 * Run tests

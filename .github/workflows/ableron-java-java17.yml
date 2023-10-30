@@ -1,4 +1,4 @@
-name: ableron-java with Java 17
+name: ableron-java @ Java 17
 
 on: push
 

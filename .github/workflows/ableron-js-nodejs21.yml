@@ -1,4 +1,4 @@
-name: ableron-js with Node.js 21
+name: ableron-js @ Node.js 21
 
 on: push
 

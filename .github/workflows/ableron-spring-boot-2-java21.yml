@@ -1,4 +1,4 @@
-name: ableron-spring-boot with Spring Boot 2 and Java 21
+name: ableron-spring-boot @ Spring Boot 2 and Java 21
 
 on: push
 
