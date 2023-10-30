@@ -1,6 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const { Ableron, AbleronConfig } = require('ableron');
+const { Ableron, AbleronConfig } = require('@ableron/ableron');
 
 const app = express()
 const port = 8080
