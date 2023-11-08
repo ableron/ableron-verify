@@ -5,7 +5,7 @@ import org.testcontainers.images.builder.ImageFromDockerfile
 
 import java.nio.file.Path
 
-class AbleronExpressNodeJs21Spec extends BaseSpec {
+class ExpressNodeJs21Spec extends BaseSpec {
 
   @Override
   GenericContainer getContainerUnderTest() {

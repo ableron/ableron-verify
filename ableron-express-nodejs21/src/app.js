@@ -1,6 +1,6 @@
-const express = require('express')
-const bodyParser = require('body-parser')
-const { createAbleronMiddleware } = require('@ableron/express');
+import express from 'express'
+import bodyParser from 'body-parser'
+import { createAbleronMiddleware } from '@ableron/express'
 
 const app = express()
 const port = 8080
