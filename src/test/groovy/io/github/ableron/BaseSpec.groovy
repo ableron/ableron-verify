@@ -1,7 +1,6 @@
 package io.github.ableron
 
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import com.github.tomakehurst.wiremock.http.HttpHeaders
 import org.testcontainers.Testcontainers
@@ -45,9 +44,7 @@ abstract class BaseSpec extends Specification {
   abstract GenericContainer getContainerUnderTest()
 
   def setupSpec() {
-    wiremockServer = new WireMockServer(options()
-      .dynamicPort()
-      .extensions(new ResponseTemplateTransformer(false)))
+    wiremockServer = new WireMockServer(options().dynamicPort())
     wiremockServer.start()
     wiremockAddress = "http://host.testcontainers.internal:${wiremockServer.port()}"
     Testcontainers.exposeHostPorts(wiremockServer.port())
