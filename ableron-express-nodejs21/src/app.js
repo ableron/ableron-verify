@@ -6,7 +6,9 @@ const app = express()
 const port = 8080
 
 app.use(bodyParser.text({ type: 'text/*', limit: '5MB' }))
-app.use(createAbleronMiddleware())
+app.use(createAbleronMiddleware({
+  cacheVaryByRequestHeaders: ['Accept-Language']
+}))
 
 app.post('/verify', (req, res) => {
   res

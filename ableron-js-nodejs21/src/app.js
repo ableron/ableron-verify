@@ -1,10 +1,12 @@
 import express from 'express'
 import bodyParser from 'body-parser'
-import { Ableron, AbleronConfig } from '@ableron/ableron'
+import { Ableron } from '@ableron/ableron'
 
 const app = express()
 const port = 8080
-const ableron = new Ableron(new AbleronConfig())
+const ableron = new Ableron({
+  cacheVaryByRequestHeaders: ['Accept-Language']
+})
 
 app.use(bodyParser.text({ type: 'text/*', limit: '5MB' }))
 

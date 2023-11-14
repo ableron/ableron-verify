@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Duration;
+import java.util.List;
 
 @RestController
 public class VerifyController {
@@ -21,7 +22,9 @@ public class VerifyController {
   private final Ableron ableron;
 
   public VerifyController() {
-    this.ableron = new Ableron(AbleronConfig.builder().build());
+    this.ableron = new Ableron(AbleronConfig.builder()
+      .cacheVaryByRequestHeaders(List.of("Accept-Language"))
+      .build());
   }
 
   @PostMapping(value = "/verify", produces = MediaType.TEXT_HTML_VALUE)

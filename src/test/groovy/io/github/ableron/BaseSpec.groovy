@@ -44,7 +44,7 @@ abstract class BaseSpec extends Specification {
   abstract GenericContainer getContainerUnderTest()
 
   def setupSpec() {
-    wiremockServer = new WireMockServer(options().dynamicPort())
+    wiremockServer = new WireMockServer(options().dynamicPort().globalTemplating(true))
     wiremockServer.start()
     wiremockAddress = "http://host.testcontainers.internal:${wiremockServer.port()}"
     Testcontainers.exposeHostPorts(wiremockServer.port())
@@ -130,9 +130,8 @@ abstract class BaseSpec extends Specification {
 
   def "should resolve multiple includes in same response"() {
     given:
-    wiremockServer.stubFor(get(urlPathMatching("/echo/.*")).willReturn(ok()
-      .withBody("{{request.pathSegments.[1]}}")
-      .withTransformers("response-template")))
+    wiremockServer.stubFor(get(urlPathMatching("/echo/.*"))
+      .willReturn(ok().withBody("{{request.pathSegments.[1]}}")))
 
     expect:
     performUiIntegration("""
@@ -1072,6 +1071,38 @@ abstract class BaseSpec extends Specification {
 
     expect:
     performUiIntegration("<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>") == ""
+  }
+
+  def "should consider cacheVaryByRequestHeaders"() {
+    given:
+    def includeSrcPathCacheVary = randomIncludeSrcPath()
+    def includeSrcPathCacheNoVary = randomIncludeSrcPath()
+    wiremockServer.stubFor(get(includeSrcPathCacheVary)
+      .willReturn(ok()
+        .withHeader("Cache-Control", "public, s-maxage=30")
+        .withBody("Accept-Language: {{request.headers.Accept-Language}}")))
+    wiremockServer.stubFor(get(includeSrcPathCacheNoVary)
+      .willReturn(ok()
+        .withHeader("Cache-Control", "public, s-maxage=30")
+        .withBody("User-Agent: {{request.headers.User-Agent}}")))
+
+    expect:
+    performUiIntegration(
+      "<ableron-include src=\"${wiremockAddress}${includeSrcPathCacheVary}\"/>",
+      ["Accept-Language": ["a"]]
+    ) == "Accept-Language: a"
+    performUiIntegration(
+      "<ableron-include src=\"${wiremockAddress}${includeSrcPathCacheVary}\"/>",
+      ["Accept-Language": ["b"]]
+    ) == "Accept-Language: b"
+    performUiIntegration(
+      "<ableron-include src=\"${wiremockAddress}${includeSrcPathCacheNoVary}\"/>",
+      ["User-Agent": ["a"]]
+    ) == "User-Agent: a"
+    performUiIntegration(
+      "<ableron-include src=\"${wiremockAddress}${includeSrcPathCacheNoVary}\"/>",
+      ["User-Agent": ["b"]]
+    ) == "User-Agent: a"
   }
 
   private String performUiIntegration(String content) {
