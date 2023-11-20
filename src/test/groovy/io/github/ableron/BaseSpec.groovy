@@ -410,10 +410,10 @@ abstract class BaseSpec extends Specification {
 
   def "should favor include tag specific request timeout over global one"() {
     given:
-    wiremockServer.stubFor(get("/5500ms-delay").willReturn(ok()
+    wiremockServer.stubFor(get("/5000ms-delay").willReturn(ok()
       .withBody("fragment")
       .withHeader("Expires", "0")
-      .withFixedDelay(5500)))
+      .withFixedDelay(5000)))
 
     when:
     def result = performUiIntegration(content)
@@ -423,12 +423,12 @@ abstract class BaseSpec extends Specification {
 
     where:
     content                                                                                                    | expectedResolvedContent
-    "<ableron-include src=\"${wiremockAddress}/5500ms-delay\"/>"                                               | ""
-    "<ableron-include src=\"${wiremockAddress}/5500ms-delay\" src-timeout-millis=\"6000\"/>"                   | "fragment"
-    "<ableron-include src=\"${wiremockAddress}/5500ms-delay\" fallback-src-timeout-millis=\"6000\"/>"          | ""
-    "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\"/>"                                      | ""
-    "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\" src-timeout-millis=\"6000\"/>"          | ""
-    "<ableron-include fallback-src=\"${wiremockAddress}/5500ms-delay\" fallback-src-timeout-millis=\"6000\"/>" | "fragment"
+    "<ableron-include src=\"${wiremockAddress}/5000ms-delay\"/>"                                               | ""
+    "<ableron-include src=\"${wiremockAddress}/5000ms-delay\" src-timeout-millis=\"6000\"/>"                   | "fragment"
+    "<ableron-include src=\"${wiremockAddress}/5000ms-delay\" fallback-src-timeout-millis=\"6000\"/>"          | ""
+    "<ableron-include fallback-src=\"${wiremockAddress}/5000ms-delay\"/>"                                      | ""
+    "<ableron-include fallback-src=\"${wiremockAddress}/5000ms-delay\" src-timeout-millis=\"6000\"/>"          | ""
+    "<ableron-include fallback-src=\"${wiremockAddress}/5000ms-delay\" fallback-src-timeout-millis=\"6000\"/>" | "fragment"
   }
 
   @Unroll
@@ -607,9 +607,9 @@ abstract class BaseSpec extends Specification {
 
     when:
     def result1 = performUiIntegration(content)
-    sleep(2000)
+    sleep(1000)
     def result2 = performUiIntegration(content)
-    sleep(3000)
+    sleep(4000)
     def result3 = performUiIntegration(content)
 
     then:
