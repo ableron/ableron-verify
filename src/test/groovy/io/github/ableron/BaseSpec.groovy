@@ -419,6 +419,7 @@ abstract class BaseSpec extends Specification {
     def result = performUiIntegration(content)
 
     then:
+    System.out.println(result)
     result == expectedResolvedContent
 
     where:
