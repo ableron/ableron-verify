@@ -5,7 +5,8 @@ import { Ableron } from '@ableron/ableron'
 const app = express()
 const port = 8080
 const ableron = new Ableron({
-  cacheVaryByRequestHeaders: ['Accept-Language']
+  cacheVaryByRequestHeaders: ['Accept-Language'],
+  statsAppendToContent: true
 })
 
 app.use(bodyParser.text({ type: 'text/*', limit: '5MB' }))
