@@ -226,82 +226,26 @@ abstract class BaseSpec extends Specification {
     "invalid fallback-src timeout" | '<ableron-include fallback-src-timeout-millis="5s">fallback</ableron-include>' | "fallback"
   }
 
-  def "should collapse fragment requests and cache fragments"() {
+  @Timeout(value = 3, unit = TimeUnit.SECONDS)
+  def "should not apply request collapsing on uncacheable resources"() {
     given:
-    wiremockServer.stubFor(get("/k5I9M").willReturn(ok()
+    def includeSrcPath = randomIncludeSrcPath()
+    wiremockServer.stubFor(get(includeSrcPath).willReturn(ok()
       .withBody("fragment")
-      .withHeader("Cache-Control", "max-age=30")
-      .withFixedDelay(200)))
-    wiremockServer.stubFor(get("/k5I9M_404").willReturn(notFound()))
+      .withHeader("Cache-Control", "private, no-cache, no-store, must-revalidate")
+      .withFixedDelay(2000)))
 
     expect:
     performUiIntegration("""
-      <html>
-      <head>
-        <ableron-include src="${wiremockAddress}/k5I9M"><!-- failed loading 1st include --></ableron-include>
-        <title>Foo</title>
-        <ableron-include src="${wiremockAddress}/k5I9M"><!-- failed loading 2nd include --></ableron-include>
-      </head>
-      <body>
-        <ableron-include src="${wiremockAddress}/k5I9M"><!-- failed loading 3rd include --></ableron-include>
-        <ableron-include src="${wiremockAddress}/k5I9M_404"><!-- failed loading 4th include --></ableron-include>
-      </body>
-      </html>
+        <ableron-include src="${wiremockAddress}${includeSrcPath}"><!-- 1 --></ableron-include>
+        <ableron-include src="${wiremockAddress}${includeSrcPath}"><!-- 2 --></ableron-include>
+        <ableron-include src="${wiremockAddress}${includeSrcPath}"><!-- 3 --></ableron-include>
     """) == """
-      <html>
-      <head>
         fragment
-        <title>Foo</title>
         fragment
-      </head>
-      <body>
         fragment
-        <!-- failed loading 4th include -->
-      </body>
-      </html>
     """
-    wiremockServer.getAllServeEvents().size() == 2
-    wiremockServer.verify(1, getRequestedFor(urlEqualTo("/k5I9M")))
-    wiremockServer.verify(1, getRequestedFor(urlEqualTo("/k5I9M_404")))
-  }
-
-  def "should not collapse fragment requests and cache fragments if prohibited by Expires header"() {
-    given:
-    wiremockServer.stubFor(get("/heM8d").willReturn(ok()
-      .withBody("fragment")
-      .withHeader("Expires", "0")
-      .withFixedDelay(200)))
-    wiremockServer.stubFor(get("/heM8d_404").willReturn(notFound()))
-
-    expect:
-    performUiIntegration("""
-      <html>
-      <head>
-        <ableron-include src="${wiremockAddress}/heM8d"><!-- failed loading 1st include --></ableron-include>
-        <title>Foo</title>
-        <ableron-include src="${wiremockAddress}/heM8d"><!-- failed loading 2nd include --></ableron-include>
-      </head>
-      <body>
-        <ableron-include src="${wiremockAddress}/heM8d"><!-- failed loading 3rd include --></ableron-include>
-        <ableron-include src="${wiremockAddress}/heM8d_404"><!-- failed loading 4th include --></ableron-include>
-      </body>
-      </html>
-    """) == """
-      <html>
-      <head>
-        fragment
-        <title>Foo</title>
-        fragment
-      </head>
-      <body>
-        fragment
-        <!-- failed loading 4th include -->
-      </body>
-      </html>
-    """
-    wiremockServer.getAllServeEvents().size() == 4
-    wiremockServer.verify(3, getRequestedFor(urlEqualTo("/heM8d")))
-    wiremockServer.verify(1, getRequestedFor(urlEqualTo("/heM8d_404")))
+    wiremockServer.verify(3, getRequestedFor(urlEqualTo(includeSrcPath)))
   }
 
   @Timeout(value = 7, unit = TimeUnit.SECONDS)
