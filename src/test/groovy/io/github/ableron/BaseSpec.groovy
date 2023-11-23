@@ -227,7 +227,7 @@ abstract class BaseSpec extends Specification {
   }
 
   @Timeout(value = 3, unit = TimeUnit.SECONDS)
-  def "should not apply request collapsing on uncacheable resources"() {
+  def "should not apply request collapsing"() {
     given:
     def includeSrcPath = randomIncludeSrcPath()
     wiremockServer.stubFor(get(includeSrcPath).willReturn(ok()
