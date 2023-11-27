@@ -5,12 +5,12 @@ import org.testcontainers.images.builder.ImageFromDockerfile
 
 import java.nio.file.Path
 
-class SpringBoot3Java21Spec extends BaseSpec {
+class Java21SpringBoot3Spec extends BaseSpec {
 
   @Override
   GenericContainer getContainerUnderTest() {
     return new GenericContainer<>(new ImageFromDockerfile()
-      .withDockerfile(Path.of("ableron-spring-boot-3-java21", "Dockerfile")))
+      .withDockerfile(Path.of("java21-spring-boot-3", "Dockerfile")))
       .withExposedPorts(8080)
   }
 }

@@ -5,12 +5,12 @@ import org.testcontainers.images.builder.ImageFromDockerfile
 
 import java.nio.file.Path
 
-class ExpressNodeJs21Spec extends BaseSpec {
+class NodeJs21Express4Spec extends BaseSpec {
 
   @Override
   GenericContainer getContainerUnderTest() {
     return new GenericContainer<>(new ImageFromDockerfile()
-      .withDockerfile(Path.of("ableron-express-nodejs21", "Dockerfile")))
+      .withDockerfile(Path.of("nodejs21-express4", "Dockerfile")))
       .withExposedPorts(8080)
   }
 }

@@ -10,7 +10,7 @@ class Java21Spec extends BaseSpec {
   @Override
   GenericContainer getContainerUnderTest() {
     return new GenericContainer<>(new ImageFromDockerfile()
-      .withDockerfile(Path.of("ableron-java-java21", "Dockerfile")))
+      .withDockerfile(Path.of("java21", "Dockerfile")))
       .withExposedPorts(8080)
   }
 }

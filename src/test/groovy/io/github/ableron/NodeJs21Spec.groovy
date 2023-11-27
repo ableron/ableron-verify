@@ -10,7 +10,7 @@ class NodeJs21Spec extends BaseSpec {
   @Override
   GenericContainer getContainerUnderTest() {
     return new GenericContainer<>(new ImageFromDockerfile()
-      .withDockerfile(Path.of("ableron-js-nodejs21", "Dockerfile")))
+      .withDockerfile(Path.of("nodejs21", "Dockerfile")))
       .withExposedPorts(8080)
   }
 }

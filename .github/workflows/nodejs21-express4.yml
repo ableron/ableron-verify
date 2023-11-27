@@ -1,4 +1,4 @@
-name: ableron-express @ Node.js 21
+name: ableron-express @ Node.js 21 & Express 4
 
 on: push
 
@@ -10,4 +10,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 21
-      - run: ./gradlew test --tests '*.ExpressNodeJs21Spec'
+      - run: ./gradlew test --tests '*.NodeJs21Express4Spec'
