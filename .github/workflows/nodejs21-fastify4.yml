@@ -1,0 +1,13 @@
+name: ableron-fastify @ Node.js 21 & Fastify 4
+
+on: push
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 21
+      - run: ./gradlew test --tests '*.NodeJs21Fastify4Spec'

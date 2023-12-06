@@ -12,7 +12,8 @@
 # Build
 .gradle/
 build/
+dist/
+node_modules/
 **/gradle/
 **/gradlew
 **/gradlew.bat
-**/node_modules

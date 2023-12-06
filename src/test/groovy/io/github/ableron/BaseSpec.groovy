@@ -1072,7 +1072,7 @@ abstract class BaseSpec extends Specification {
 
     def response = httpClient.send(requestBuilder
       .POST(HttpRequest.BodyPublishers.ofString(content))
-      .setHeader("Content-Type", "text/html")
+      .setHeader("Content-Type", "text/plain")
       .build(), HttpResponse.BodyHandlers.ofString())
     return response
   }
