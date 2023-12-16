@@ -1,6 +1,9 @@
 import Fastify from 'fastify';
 import ableronPlugin from '@ableron/fastify';
-const app = Fastify();
+const app = Fastify({
+  bodyLimit: 5 * 1024 * 1024,
+  logger: true
+});
 
 app.register(ableronPlugin, {
   ableron: {
@@ -16,4 +19,4 @@ app.post('/verify', (request, reply) => {
     .send(request.body);
 });
 
-app.listen({ port: 8080 }, console.log);
+app.listen({ port: 8080, host: '0.0.0.0' })
