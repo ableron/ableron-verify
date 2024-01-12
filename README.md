@@ -11,6 +11,7 @@ Test suite to verify all implementations of ableron provide a common feature set
 * [![ableron-js @ Node.js 21 CommonJS Status](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-cjs.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-cjs.yml)
 * [![ableron-js @ Node.js 21 ES Modules Status](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-esm.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-esm.yml)
 * [![ableron-express @ Node.js 21 & Express 4 Status](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-express4.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-express4.yml)
+* [![ableron-fastify @ Node.js 21 & Fastify 4 Status](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-fastify4.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-fastify4.yml)
 
 ## Quick Start
 * Run tests
