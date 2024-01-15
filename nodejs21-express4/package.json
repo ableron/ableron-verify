@@ -4,7 +4,7 @@
     "start": "node src/app.js"
   },
   "dependencies": {
-    "@ableron/express": "^1.3.0",
+    "@ableron/express": "^1.5.0",
     "body-parser": "^1.20.2",
     "express": "^4.18.2"
   }
