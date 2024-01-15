@@ -1,11 +1,11 @@
 import Fastify from 'fastify';
-import ableronPlugin from '@ableron/fastify';
+import ableron from '@ableron/fastify';
 const app = Fastify({
   bodyLimit: 5 * 1024 * 1024,
   logger: true
 });
 
-app.register(ableronPlugin, {
+app.register(ableron, {
   ableron: {
     cacheVaryByRequestHeaders: ['Accept-Language'],
     logger: console

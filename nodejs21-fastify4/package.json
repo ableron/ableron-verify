@@ -4,7 +4,7 @@
     "start": "node src/app.js"
   },
   "dependencies": {
-    "@ableron/fastify": "^1.0.0",
-    "fastify": "^4.24.3"
+    "@ableron/fastify": "^1.1.0",
+    "fastify": "^4.25.2"
   }
 }
