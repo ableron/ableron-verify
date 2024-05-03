@@ -14,7 +14,7 @@ repositories {
 }
 
 dependencies {
-  implementation('io.github.ableron:ableron:1.7.0') {
+  implementation('io.github.ableron:ableron:1.9.0') {
     exclude group: 'org.slf4j', module: 'slf4j-api'
   }
   implementation 'org.springframework.boot:spring-boot-starter-web:2.7.18'
