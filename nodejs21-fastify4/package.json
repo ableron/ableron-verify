@@ -5,6 +5,6 @@
   },
   "dependencies": {
     "@ableron/fastify": "^1.1.0",
-    "fastify": "^4.25.2"
+    "fastify": "^4.26.2"
   }
 }
