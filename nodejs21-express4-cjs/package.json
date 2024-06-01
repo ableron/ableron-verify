@@ -3,7 +3,7 @@
     "start": "node src/app.js"
   },
   "dependencies": {
-    "@ableron/express": "^1.5.0",
+    "@ableron/express": "^1.5.1",
     "body-parser": "^1.20.2",
     "express": "^4.19.2"
   }
