@@ -11,4 +11,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 21
-      - run: ./gradlew test --tests '*.NodeJs21Fastify4Spec'
+      - run: ./gradlew test --tests '*.NodeJs21Fastify4Spec' --info
