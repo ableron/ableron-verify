@@ -11,6 +11,5 @@ class NodeJs21CommonJsSpec extends BaseSpec {
   GenericContainer getContainerUnderTest() {
     return new GenericContainer<>(new ImageFromDockerfile()
       .withDockerfile(Path.of("nodejs21-cjs", "Dockerfile")))
-      .withExposedPorts(8080)
   }
 }

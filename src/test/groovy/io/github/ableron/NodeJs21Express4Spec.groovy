@@ -11,6 +11,5 @@ class NodeJs21Express4Spec extends BaseSpec {
   GenericContainer getContainerUnderTest() {
     return new GenericContainer<>(new ImageFromDockerfile()
       .withDockerfile(Path.of("nodejs21-express4", "Dockerfile")))
-      .withExposedPorts(8080)
   }
 }

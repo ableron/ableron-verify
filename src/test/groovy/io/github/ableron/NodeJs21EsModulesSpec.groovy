@@ -11,6 +11,5 @@ class NodeJs21EsModulesSpec extends BaseSpec {
   GenericContainer getContainerUnderTest() {
     return new GenericContainer<>(new ImageFromDockerfile()
       .withDockerfile(Path.of("nodejs21-esm", "Dockerfile")))
-      .withExposedPorts(8080)
   }
 }

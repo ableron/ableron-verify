@@ -26,6 +26,8 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 
 abstract class BaseSpec extends Specification {
 
+  private static final APPLICATION_PORT = 8080
+
   @Shared
   WireMockServer wiremockServer
 
@@ -51,7 +53,8 @@ abstract class BaseSpec extends Specification {
     wiremockAddress = "http://host.testcontainers.internal:${wiremockServer.port()}"
     Testcontainers.exposeHostPorts(wiremockServer.port())
     container = getContainerUnderTest()
-    container.followOutput(new Slf4jLogConsumer(LoggerFactory.getLogger(getClass())))
+      .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(getClass())))
+      .withExposedPorts(APPLICATION_PORT)
     container.start()
     verifyUrl = URI.create("http://${container.host}:${container.firstMappedPort}/verify")
   }
