@@ -3,8 +3,10 @@ package io.github.ableron
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import com.github.tomakehurst.wiremock.http.HttpHeaders
+import org.slf4j.LoggerFactory
 import org.testcontainers.Testcontainers
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Timeout
@@ -49,6 +51,7 @@ abstract class BaseSpec extends Specification {
     wiremockAddress = "http://host.testcontainers.internal:${wiremockServer.port()}"
     Testcontainers.exposeHostPorts(wiremockServer.port())
     container = getContainerUnderTest()
+    container.followOutput(new Slf4jLogConsumer(LoggerFactory.getLogger(getClass())))
     container.start()
     verifyUrl = URI.create("http://${container.host}:${container.firstMappedPort}/verify")
   }
