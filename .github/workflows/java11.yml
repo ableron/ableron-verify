@@ -13,4 +13,4 @@ jobs:
           java-version: 21
           distribution: temurin
           cache: gradle
-      - run: ./gradlew test --tests '*.Java11Spec'
+      - run: ./gradlew test --tests '*.Java11Spec' --info
