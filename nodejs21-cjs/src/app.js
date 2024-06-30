@@ -25,7 +25,7 @@ app.listen(port, () => {
   console.log(`Listening on port ${port}`)
 })
 
-setInterval(function () {
+setInterval(() => {
   console.log('[ZZZZ] setInterval() debugging fired')
   log()
 }, 20000)
