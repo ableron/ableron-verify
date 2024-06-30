@@ -1,7 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const { Ableron } = require('@ableron/ableron')
-const blocked = require('blocked-at')
 
 const app = express()
 const port = 8080
@@ -20,10 +19,6 @@ app.post('/verify', async (req, res) => {
     .status(transclusionResult.getStatusCodeOverride() || 200)
     .send(transclusionResult.getContent())
 })
-
-blocked((time, stack) => {
-  console.log(`Blocked for ${time}ms, operation started here:`, stack)
-}, { threshold: 10 })
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`)
