@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-  testImplementation 'org.wiremock:wiremock:3.7.0'
+  testImplementation 'org.wiremock:wiremock:3.8.0'
   testImplementation 'org.apache.groovy:groovy-all:4.0.21'
   testImplementation 'org.slf4j:slf4j-simple:2.0.13'
   testImplementation 'org.spockframework:spock-core:2.4-M4-groovy-4.0'
