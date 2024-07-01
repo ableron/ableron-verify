@@ -3,9 +3,8 @@
     "start": "node src/app.js"
   },
   "dependencies": {
-    "@ableron/ableron": "1.5.0",
+    "@ableron/express": "^1.5.1",
     "body-parser": "^1.20.2",
-    "express": "^4.19.2",
-    "why-is-node-running": "^2.2.2"
+    "express": "^4.19.2"
   }
 }

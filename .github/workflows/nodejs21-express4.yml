@@ -1,4 +1,4 @@
-name: ableron-express @ Node.js 21 & Express 4
+name: ableron-express @ Node.js 22 & Express 4
 
 on: push
 
@@ -13,4 +13,4 @@ jobs:
           java-version: 21
           distribution: temurin
           cache: gradle
-      - run: ./gradlew test --tests '*.NodeJs21Express4Spec' --info
+      - run: ./gradlew test --tests '*.NodeJs22Express4Spec' --info

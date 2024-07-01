@@ -5,11 +5,11 @@ import org.testcontainers.images.builder.ImageFromDockerfile
 
 import java.nio.file.Path
 
-class NodeJs21Express4CjsSpec extends BaseSpec {
+class NodeJs22Fastify4Spec extends BaseSpec {
 
   @Override
   GenericContainer getContainerUnderTest() {
     return new GenericContainer<>(new ImageFromDockerfile()
-      .withDockerfile(Path.of("nodejs21-express4-cjs", "Dockerfile")))
+      .withDockerfile(Path.of("nodejs22-fastify4", "Dockerfile")))
   }
 }

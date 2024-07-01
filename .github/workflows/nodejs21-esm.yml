@@ -1,4 +1,4 @@
-name: ableron-js @ Node.js 21 using ES Modules
+name: ableron-js @ Node.js 22 using ES Modules
 
 on: push
 
@@ -13,4 +13,4 @@ jobs:
           java-version: 21
           distribution: temurin
           cache: gradle
-      - run: ./gradlew test --tests '*.NodeJs21EsModulesSpec' --info
+      - run: ./gradlew test --tests '*.NodeJs22EsModulesSpec' --info

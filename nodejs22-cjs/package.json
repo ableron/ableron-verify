@@ -1,10 +1,9 @@
 {
-  "type": "module",
   "scripts": {
     "start": "node src/app.js"
   },
   "dependencies": {
-    "@ableron/ableron": "^1.8.2",
+    "@ableron/ableron": "^1.8.1",
     "body-parser": "^1.20.2",
     "express": "^4.19.2"
   }

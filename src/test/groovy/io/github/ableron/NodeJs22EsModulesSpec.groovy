@@ -5,11 +5,11 @@ import org.testcontainers.images.builder.ImageFromDockerfile
 
 import java.nio.file.Path
 
-class NodeJs21EsModulesSpec extends BaseSpec {
+class NodeJs22EsModulesSpec extends BaseSpec {
 
   @Override
   GenericContainer getContainerUnderTest() {
     return new GenericContainer<>(new ImageFromDockerfile()
-      .withDockerfile(Path.of("nodejs21-esm", "Dockerfile")))
+      .withDockerfile(Path.of("nodejs22-esm", "Dockerfile")))
   }
 }

@@ -8,11 +8,11 @@ Test suite to verify all implementations of ableron provide a common feature set
 * [![ableron-spring-boot @ Java 21 & Spring Boot 2 Status](https://github.com/ableron/ableron-verify/actions/workflows/java21-spring-boot-2.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/java21-spring-boot-2.yml)
 * [![ableron-spring-boot @ Java 17 & Spring Boot 3 Status](https://github.com/ableron/ableron-verify/actions/workflows/java17-spring-boot-3.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/java17-spring-boot-3.yml)
 * [![ableron-spring-boot @ Java 21 & Spring Boot 3 Status](https://github.com/ableron/ableron-verify/actions/workflows/java21-spring-boot-3.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/java21-spring-boot-3.yml)
-* [![ableron-js @ Node.js 21 CommonJS Status](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-cjs.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-cjs.yml)
-* [![ableron-js @ Node.js 21 ES Modules Status](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-esm.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-esm.yml)
-* [![ableron-express @ Node.js 21 & Express 4 Status](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-express4.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-express4.yml)
-* [![ableron-express @ Node.js 21 & Express 4 & CJS Status](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-express4-cjs.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-express4-cjs.yml)
-* [![ableron-fastify @ Node.js 21 & Fastify 4 Status](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-fastify4.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/nodejs21-fastify4.yml)
+* [![ableron-js @ Node.js 22 CommonJS Status](https://github.com/ableron/ableron-verify/actions/workflows/nodejs22-cjs.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/nodejs22-cjs.yml)
+* [![ableron-js @ Node.js 22 ES Modules Status](https://github.com/ableron/ableron-verify/actions/workflows/nodejs22-esm.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/nodejs22-esm.yml)
+* [![ableron-express @ Node.js 22 & Express 4 Status](https://github.com/ableron/ableron-verify/actions/workflows/nodejs22-express4.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/nodejs22-express4.yml)
+* [![ableron-express @ Node.js 22 & Express 4 & CJS Status](https://github.com/ableron/ableron-verify/actions/workflows/nodejs22-express4-cjs.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/nodejs22-express4-cjs.yml)
+* [![ableron-fastify @ Node.js 22 & Fastify 4 Status](https://github.com/ableron/ableron-verify/actions/workflows/nodejs22-fastify4.yml/badge.svg)](https://github.com/ableron/ableron-verify/actions/workflows/nodejs22-fastify4.yml)
 
 ## Quick Start
 * Run tests

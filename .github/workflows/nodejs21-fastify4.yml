@@ -1,4 +1,4 @@
-name: ableron-fastify @ Node.js 21 & Fastify 4
+name: ableron-fastify @ Node.js 22 & Fastify 4
 
 on: push
 
@@ -13,4 +13,4 @@ jobs:
           java-version: 21
           distribution: temurin
           cache: gradle
-      - run: ./gradlew test --tests '*.NodeJs21Fastify4Spec' --info
+      - run: ./gradlew test --tests '*.NodeJs22Fastify4Spec' --info

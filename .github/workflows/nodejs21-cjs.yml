@@ -1,4 +1,4 @@
-name: ableron-js @ Node.js 21 using CommonJS
+name: ableron-js @ Node.js 22 using CommonJS
 
 on: push
 
@@ -13,4 +13,4 @@ jobs:
           java-version: 21
           distribution: temurin
           cache: gradle
-      - run: ./gradlew test --tests '*.NodeJs21CommonJsSpec' --info
+      - run: ./gradlew test --tests '*.NodeJs22CommonJsSpec' --info
