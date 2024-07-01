@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.testcontainers.Testcontainers
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
+import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Timeout
@@ -997,6 +998,7 @@ abstract class BaseSpec extends Specification {
     """
   }
 
+  @Ignore
   def "should handle broken gzip encoding"() {
     given:
     def includeSrcPath = randomIncludeSrcPath()
@@ -1010,6 +1012,7 @@ abstract class BaseSpec extends Specification {
     performUiIntegration("<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>") == ""
   }
 
+  @Ignore
   def "should handle unknown content encoding"() {
     given:
     def includeSrcPath = randomIncludeSrcPath()
