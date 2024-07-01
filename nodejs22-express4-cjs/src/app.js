@@ -1,4 +1,3 @@
-const log = require('why-is-node-running')
 const express = require('express')
 const bodyParser = require('body-parser')
 const ableron = require('@ableron/express').default
@@ -18,8 +17,3 @@ app.post('/verify', (req, res) => {
 })
 
 app.listen(port, () => console.log(`Listening on port ${port}`))
-
-setInterval(() => {
-  console.log('[ZZZZ] setInterval() debugging fired')
-  log()
-}, 20000)
