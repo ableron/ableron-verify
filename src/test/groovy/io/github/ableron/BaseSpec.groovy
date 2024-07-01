@@ -998,7 +998,7 @@ abstract class BaseSpec extends Specification {
     """
   }
 
-  @Ignore
+  @Ignore("makes ableron-js based apps fail for unknown reason")
   def "should handle broken gzip encoding"() {
     given:
     def includeSrcPath = randomIncludeSrcPath()
@@ -1012,7 +1012,6 @@ abstract class BaseSpec extends Specification {
     performUiIntegration("<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>") == ""
   }
 
-  @Ignore
   def "should handle unknown content encoding"() {
     given:
     def includeSrcPath = randomIncludeSrcPath()
