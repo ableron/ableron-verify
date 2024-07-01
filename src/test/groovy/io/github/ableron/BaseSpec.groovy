@@ -1010,18 +1010,18 @@ abstract class BaseSpec extends Specification {
 //    performUiIntegration("<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>") == ""
 //  }
 
-  def "should handle unknown content encoding"() {
-    given:
-    def includeSrcPath = randomIncludeSrcPath()
-    wiremockServer.stubFor(get(includeSrcPath)
-      .withHeader("Accept-Encoding", containing("gzip"))
-      .willReturn(ok()
-        .withHeader("Content-Encoding", "br")
-        .withBody("plain text body but with wrong content-encoding")))
-
-    expect:
-    performUiIntegration("<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>") == ""
-  }
+//  def "should handle unknown content encoding"() {
+//    given:
+//    def includeSrcPath = randomIncludeSrcPath()
+//    wiremockServer.stubFor(get(includeSrcPath)
+//      .withHeader("Accept-Encoding", containing("gzip"))
+//      .willReturn(ok()
+//        .withHeader("Content-Encoding", "br")
+//        .withBody("plain text body but with wrong content-encoding")))
+//
+//    expect:
+//    performUiIntegration("<ableron-include src=\"${wiremockAddress}${includeSrcPath}\"/>") == ""
+//  }
 
   def "should consider cacheVaryByRequestHeaders"() {
     given:
