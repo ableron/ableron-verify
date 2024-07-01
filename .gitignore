@@ -17,6 +17,3 @@ node_modules/
 **/gradle/
 **/gradlew
 **/gradlew.bat
-
-# npm
-package-lock.json
