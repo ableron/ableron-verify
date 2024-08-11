@@ -12,7 +12,7 @@ app.use(ableron({
 
 app.post('/verify', (req, res) => {
   res
-    .setHeader('Cache-Control', 'max-age=600')
+    .set('Cache-Control', 'max-age=600')
     .send(req.body)
 })
 
