@@ -981,6 +981,16 @@ abstract class BaseSpec extends Specification {
     [new HttpHeader("Cache-Control", "max-age=1200")]                                                  | "max-age=600"
   }
 
+  def "should calculate content expiration time correctly for content without fragments"() {
+    when:
+    def result = performUiIntegrationRaw("body without any fragments")
+
+    then:
+    result.statusCode() == 200
+    result.headers().firstValue("Cache-Control").get() == "max-age=600"
+    result.body() == "body without any fragments"
+  }
+
   def "should utilize gzip encoding"() {
     given:
     def includeSrcPath = randomIncludeSrcPath()
