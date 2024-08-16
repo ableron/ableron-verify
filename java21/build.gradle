@@ -15,5 +15,5 @@ repositories {
 
 dependencies {
   implementation 'io.github.ableron:ableron:1.10.0'
-  implementation 'org.springframework.boot:spring-boot-starter-web:3.3.3'
+  implementation 'org.springframework.boot:spring-boot-starter-web:3.3.2'
 }
